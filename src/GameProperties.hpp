@@ -28,8 +28,16 @@ public:
     static jt::color PaletteFlashGreen() { return jt::color { 51, 143, 63 }; };
     static jt::color PaletteFlashRed() { return jt::color { 143, 33, 33 }; };
 
-    static std::string GameName() { return "MyAwesomeGame"; };
+    static std::string GameName() { return "7DFPS"; };
     static jt::vector2 GetWindowSize() { return jt::vector2 { 800, 600 }; }
+    static float GetZoom() { return 2.0f; }
+    static std::size_t GetDivisions()
+    {
+        return static_cast<std::size_t>(ceil(GetWindowSize().x() / GetZoom())) / 10;
+    }
+    static float GetFoVAngle() { return 80.0f; }
+
+    static float PlayerTurningSpeed() { return 20.0f; }
 };
 
 #endif

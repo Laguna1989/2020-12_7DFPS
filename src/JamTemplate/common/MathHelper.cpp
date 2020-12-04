@@ -4,6 +4,8 @@
 namespace jt {
 namespace MathHelper {
 
+const float pi = 2.0f * std::acos(0.0f);
+
 float lengthSquared(jt::vector2 const& v) { return v.x() * v.x() + v.y() * v.y(); }
 
 float length(jt::vector2 const& v) { return std::sqrt(lengthSquared(v)); }
@@ -20,8 +22,8 @@ void normalizeMe(jt::vector2& v, float lowerbound)
     }
 }
 
-float rad2deg(float a) { return a * 180.0f / 3.1415926f; }
-float deg2rad(float a) { return a / 180.0f * 3.1415926f; }
+float rad2deg(float a) { return a * 180.0f / pi; }
+float deg2rad(float a) { return a / 180.0f * pi; }
 
 std::string floatToStringWithXDigits(float const number, unsigned int digits)
 {

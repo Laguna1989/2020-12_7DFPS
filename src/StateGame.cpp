@@ -3,10 +3,61 @@
 #include "GameProperties.hpp"
 #include "Hud.hpp"
 #include "InputManager.hpp"
+#include "MathHelper.hpp"
 #include "SmartShape.hpp"
 #include "SmartSprite.hpp"
 #include "TweenAlpha.hpp"
 #include "color.hpp"
+#include <algorithm>
+
+namespace {
+float mytan(float a) { return std::tan(jt::MathHelper::deg2rad(a)); }
+float mytaninv(float a) { return (1.0f / std::tan(jt::MathHelper::deg2rad(a))); }
+float mycos(float a) { return std::cos(jt::MathHelper::deg2rad(a)); }
+float mysin(float a) { return std::sin(jt::MathHelper::deg2rad(a)); }
+float wrapAngle(float a)
+{
+    if (a < 0) {
+        while (a < 0) {
+            a += 360;
+        }
+    } else if (a >= 360.0f) {
+        while (a >= 360) {
+            a += 360;
+        }
+    }
+    return a;
+}
+
+#define mapWidth 24
+#define mapHeight 24
+// TODO Load from image instead of hardcoded map
+int worldMap[mapWidth][mapHeight]
+    = { { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 } };
+} // namespace
 
 void StateGame::doCreate()
 {
@@ -39,6 +90,10 @@ void StateGame::doCreate()
 void StateGame::doInternalUpdate(float const elapsed)
 {
     m_background->update(elapsed);
+    calculateWallScales();
+    for (auto const w : m_walls) {
+        w->update(elapsed);
+    }
     m_overlay->update(elapsed);
 }
 
@@ -46,7 +101,133 @@ void StateGame::doInternalDraw() const
 {
     m_background->draw(getGame()->getRenderTarget());
     drawObjects();
+    for (auto const w : m_walls) {
+        w->draw(getGame()->getRenderTarget());
+    }
     m_overlay->draw(getGame()->getRenderTarget());
 }
 
-void StateGame::doCreateInternal() { }
+void StateGame::doCreateInternal()
+{
+    m_walls.resize(GP::GetDivisions());
+    for (auto i = 0U; i != GP::GetDivisions(); ++i) {
+        auto w = std::make_shared<jt::SmartShape>();
+        float const binWidth = GP::GetWindowSize().x() / GP::GetZoom() / GP::GetDivisions();
+        w->makeRect({ binWidth, GP::GetWindowSize().y() / GP::GetZoom() });
+        w->setColor(jt::Random::getRandomColor());
+        w->setPosition({ static_cast<float>(i * binWidth), 0.0f });
+        m_walls.at(i) = w;
+    }
+    std::reverse(m_walls.begin(), m_walls.end());
+
+    m_player = std::make_shared<Player>();
+    m_player->position = jt::vector2 { 20.0f, 2.5f };
+    m_player->angle = 0;
+    add(m_player);
+}
+
+void StateGame::calculateWallScales()
+{
+    // player absolut position
+    float const px = m_player->position.x();
+    float const py = m_player->position.y();
+
+    // player position in full tiles
+    int x = static_cast<int>(px);
+    int y = static_cast<int>(py);
+
+    // player offset in tile
+    float const dx = px - x;
+    float const dy = py - y;
+
+    float const angleIncrement = GP::GetFoVAngle() / GP::GetDivisions();
+    float const angleStart = m_player->angle - GP::GetFoVAngle() * 0.5f;
+
+    for (auto i = 0U; i != GP::GetDivisions(); ++i) {
+        // ray direction
+        float const theta = wrapAngle(angleStart + i * angleIncrement);
+        auto w = m_walls.at(i);
+
+        jt::vector2 vIntersectionPos {};
+        jt::vector2 hIntersectionPos {};
+
+        if (theta >= 0 && theta < 90) {
+            // top right x+, y-
+            {
+                // vertical grid intersections
+                float const v1x = x + 1;
+                float const v1y = py - (1 - dy) * mytan(theta);
+                float vnx = v1x;
+                float vny = v1y;
+                for (int i = 0; i != 50; ++i) {
+                    int const ttcx = static_cast<int>(vnx) + 1;
+                    int const ttcy = static_cast<int>(vny);
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                        break;
+                    }
+                    if (worldMap[ttcy][ttcx]) {
+                        vIntersectionPos = jt::vector2 { vnx, vny };
+                        break;
+                    }
+                    // increase vertical intersection
+                    vnx += 1;
+                    vny -= mytan(theta);
+                }
+            }
+
+            {
+                // horizontal grid intersections
+                float const h1x = (theta == 0) ? x : px + dy * mytaninv(theta);
+                float const h1y = y;
+                float hnx = h1x;
+                float hny = h1y;
+                for (int i = 0; i != 50; ++i) {
+                    int const ttcx = static_cast<int>(hnx);
+                    int const ttcy = static_cast<int>(hny) - 1;
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                        break;
+                    }
+                    if (worldMap[ttcy][ttcx]) {
+                        hIntersectionPos = jt::vector2 { hnx, hny };
+                        break;
+                    }
+                    // increase horizontal intersection
+                    hnx += (theta == 0) ? 0 : mytaninv(theta);
+                    hny -= 1;
+                }
+            }
+
+        } else if (theta >= 90 && theta < 180) {
+            // top left x-, y-
+            w->setScale({ 1.0f, 0.0f });
+            continue;
+        } else if (theta > 180 && theta < 270) {
+            // bottom left x-, y+
+            w->setScale({ 1.0f, 0.0f });
+            continue;
+        } else {
+            // bottom right x+, y+
+            w->setScale({ 1.0f, 0.0f });
+            continue;
+        }
+
+        auto const dh = hIntersectionPos - m_player->position;
+        auto const dv = vIntersectionPos - m_player->position;
+        auto const lhs = jt::MathHelper::lengthSquared(dh);
+        auto const lvs = jt::MathHelper::lengthSquared(dv);
+        float d;
+        if (lhs > lvs) {
+            d = 0.85f
+                / (abs(dv.x()) * mycos(m_player->angle) + abs(dv.y()) * mysin(m_player->angle));
+
+        } else {
+            d = 0.85f
+                / (abs(dh.x()) * mycos(m_player->angle) + abs(dh.y()) * mysin(m_player->angle));
+        }
+
+        auto p = w->getPosition();
+        p.y() = (1.0f - d) * 0.5f * (GP::GetWindowSize().y() / GP::GetZoom());
+        w->setPosition(p);
+        w->setScale({ 1.0f, d });
+    }
+}

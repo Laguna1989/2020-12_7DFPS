@@ -2,6 +2,7 @@
 #define GAME_STATE_GAME_HPP_INCLUDEGUARD
 
 #include "GameState.hpp"
+#include "Player.hpp"
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -25,12 +26,17 @@ private:
     std::shared_ptr<jt::SmartShape> m_background;
     std::shared_ptr<jt::SmartShape> m_overlay;
 
+    std::vector<std::shared_ptr<jt::SmartShape>> m_walls;
+    std::shared_ptr<Player> m_player;
+
     void doCreate() override;
 
     virtual void doCreateInternal();
 
     virtual void doInternalUpdate(float const elapsed) override;
     virtual void doInternalDraw() const override;
+
+    void calculateWallScales();
 };
 
 #endif
