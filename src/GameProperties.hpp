@@ -35,7 +35,7 @@ public:
     {
         return static_cast<std::size_t>(ceil(GetWindowSize().x() / GetZoom())) / 1;
     }
-    static float GetFoVAngle() { return 65.0f; }
+    static float GetFoVAngle() { return 60.0f; }
 
     static float PlayerTurningSpeed() { return 30.0f; }
 
