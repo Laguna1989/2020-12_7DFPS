@@ -123,11 +123,12 @@ void StateGame::doCreateInternal()
         w->setPosition({ static_cast<float>(i * binWidth), 0.0f });
         m_walls.at(i) = w;
     }
+    // reverse for wall segments being rendered from right to left (mathematical positive angle)
     std::reverse(m_walls.begin(), m_walls.end());
 
     m_player = std::make_shared<Player>();
-    m_player->position = jt::vector2 { 20.0f, 3.5f };
-    m_player->angle = 90;
+    m_player->position = jt::vector2 { 20.0f, 3.333f };
+    m_player->angle = 74.0f;
     add(m_player);
 
     m_mapBackground = std::make_shared<jt::SmartShape>();
@@ -178,6 +179,8 @@ void StateGame::calculateWallScales()
                 float const h1y = y;
                 float hnx = h1x;
                 float hny = h1y;
+                float const xIncrement = (theta == 0) ? 0 : mytaninv(theta);
+                float const yIncrement = -1;
                 for (int i = 0; i != 50; ++i) {
                     int const ttcx = static_cast<int>(hnx);
                     int const ttcy = static_cast<int>(hny) - 1;
@@ -189,18 +192,18 @@ void StateGame::calculateWallScales()
                         break;
                     }
                     // increase horizontal intersection
-                    hnx += (theta == 0) ? 0 : mytaninv(theta);
-                    hny -= 1;
+                    hnx += xIncrement;
+                    hny += yIncrement;
                 }
             }
             {
                 // vertical grid intersections
                 float const v1x = x + 1;
-                float const v1y = py - (1 - dy) * mytan(theta);
+                float const v1y = py - (1 - dx) * mytan(theta);
                 float vnx = v1x;
                 float vny = v1y;
                 for (int i = 0; i != 50; ++i) {
-                    int const ttcx = static_cast<int>(vnx) + 1;
+                    int const ttcx = static_cast<int>(vnx);
                     int const ttcy = static_cast<int>(vny);
                     if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
                         break;
@@ -237,10 +240,12 @@ void StateGame::calculateWallScales()
         if (lhs > lvs) {
             d = 0.85f
                 / (abs(dv.x()) * mycos(m_player->angle) + abs(dv.y()) * mysin(m_player->angle));
+            w->setColor(jt::color { 150, 250, 250, 255 });
 
         } else {
             d = 0.85f
                 / (abs(dh.x()) * mycos(m_player->angle) + abs(dh.y()) * mysin(m_player->angle));
+            w->setColor(jt::color { 250, 250, 150, 255 });
         }
 
         auto p = w->getPosition();

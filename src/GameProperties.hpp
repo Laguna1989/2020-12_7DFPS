@@ -33,11 +33,11 @@ public:
     static float GetZoom() { return 2.0f; }
     static std::size_t GetDivisions()
     {
-        return static_cast<std::size_t>(ceil(GetWindowSize().x() / GetZoom())) / 10;
+        return static_cast<std::size_t>(ceil(GetWindowSize().x() / GetZoom())) / 1;
     }
-    static float GetFoVAngle() { return 80.0f; }
+    static float GetFoVAngle() { return 65.0f; }
 
-    static float PlayerTurningSpeed() { return 20.0f; }
+    static float PlayerTurningSpeed() { return 30.0f; }
 
     static int MapTileSizeInPixel() { return 3; }
 };

@@ -20,5 +20,5 @@ void Player::doUpdate(float elapsed)
     if (jt::InputManager::pressed(jt::KeyCode::S)) {
         position = position + elapsed * -1.0f * dir;
     }
-    std::cout << position.x() << " " << position.y() << "\n";
+    // std::cout << position.x() << " " << position.y() << "\n";
 }
