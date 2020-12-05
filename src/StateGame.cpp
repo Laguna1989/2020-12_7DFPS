@@ -34,7 +34,7 @@ float wrapAngle(float a)
 // TODO Load from image instead of hardcoded map
 int worldMap[mapWidth][mapHeight]
     = { { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1 },
           { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
           { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
           { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
@@ -95,6 +95,9 @@ void StateGame::doInternalUpdate(float const elapsed)
         w->update(elapsed);
     }
     m_overlay->update(elapsed);
+    m_mapPlayer->setPosition(m_player->position * GP::MapTileSizeInPixel());
+    m_mapPlayer->update(elapsed);
+    m_mapBackground->update(elapsed);
 }
 
 void StateGame::doInternalDraw() const
@@ -104,6 +107,8 @@ void StateGame::doInternalDraw() const
     for (auto const w : m_walls) {
         w->draw(getGame()->getRenderTarget());
     }
+
+    drawMap();
     m_overlay->draw(getGame()->getRenderTarget());
 }
 
@@ -121,9 +126,22 @@ void StateGame::doCreateInternal()
     std::reverse(m_walls.begin(), m_walls.end());
 
     m_player = std::make_shared<Player>();
-    m_player->position = jt::vector2 { 20.0f, 2.5f };
-    m_player->angle = 0;
+    m_player->position = jt::vector2 { 20.0f, 3.5f };
+    m_player->angle = 90;
     add(m_player);
+
+    m_mapBackground = std::make_shared<jt::SmartShape>();
+    m_mapBackground->makeRect({ static_cast<float>(mapWidth * GP::MapTileSizeInPixel()),
+        static_cast<float>(mapHeight * GP::MapTileSizeInPixel()) });
+    m_mapBackground->setColor(jt::colors::Cyan);
+    m_mapWall = std::make_shared<jt::SmartShape>();
+    m_mapWall->makeRect({ static_cast<float>(GP::MapTileSizeInPixel()),
+        static_cast<float>(GP::MapTileSizeInPixel()) });
+    m_mapWall->setColor(jt::colors::Green);
+    m_mapPlayer = std::make_shared<jt::SmartShape>();
+    m_mapPlayer->makeRect({ static_cast<float>(GP::MapTileSizeInPixel()),
+        static_cast<float>(GP::MapTileSizeInPixel()) });
+    m_mapPlayer->setColor(jt::colors::Red);
 }
 
 void StateGame::calculateWallScales()
@@ -153,27 +171,6 @@ void StateGame::calculateWallScales()
 
         if (theta >= 0 && theta < 90) {
             // top right x+, y-
-            {
-                // vertical grid intersections
-                float const v1x = x + 1;
-                float const v1y = py - (1 - dy) * mytan(theta);
-                float vnx = v1x;
-                float vny = v1y;
-                for (int i = 0; i != 50; ++i) {
-                    int const ttcx = static_cast<int>(vnx) + 1;
-                    int const ttcy = static_cast<int>(vny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
-                        break;
-                    }
-                    if (worldMap[ttcy][ttcx]) {
-                        vIntersectionPos = jt::vector2 { vnx, vny };
-                        break;
-                    }
-                    // increase vertical intersection
-                    vnx += 1;
-                    vny -= mytan(theta);
-                }
-            }
 
             {
                 // horizontal grid intersections
@@ -194,6 +191,27 @@ void StateGame::calculateWallScales()
                     // increase horizontal intersection
                     hnx += (theta == 0) ? 0 : mytaninv(theta);
                     hny -= 1;
+                }
+            }
+            {
+                // vertical grid intersections
+                float const v1x = x + 1;
+                float const v1y = py - (1 - dy) * mytan(theta);
+                float vnx = v1x;
+                float vny = v1y;
+                for (int i = 0; i != 50; ++i) {
+                    int const ttcx = static_cast<int>(vnx) + 1;
+                    int const ttcy = static_cast<int>(vny);
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                        break;
+                    }
+                    if (worldMap[ttcy][ttcx]) {
+                        vIntersectionPos = jt::vector2 { vnx, vny };
+                        break;
+                    }
+                    // increase vertical intersection
+                    vnx += 1;
+                    vny -= mytan(theta);
                 }
             }
 
@@ -229,5 +247,23 @@ void StateGame::calculateWallScales()
         p.y() = (1.0f - d) * 0.5f * (GP::GetWindowSize().y() / GP::GetZoom());
         w->setPosition(p);
         w->setScale({ 1.0f, d });
+    }
+}
+
+void StateGame::drawMap() const
+{
+    m_mapBackground->draw(getGame()->getRenderTarget());
+
+    m_mapPlayer->draw(getGame()->getRenderTarget());
+
+    for (size_t i = 0U; i != mapWidth; ++i) {
+        for (size_t j = 0U; j != mapHeight; ++j) {
+            if (worldMap[j][i]) {
+                m_mapWall->setPosition(
+                    { 1.0f * i * GP::MapTileSizeInPixel(), 1.0f * j * GP::MapTileSizeInPixel() });
+                m_mapWall->update(0.0f);
+                m_mapWall->draw(getGame()->getRenderTarget());
+            }
+        }
     }
 }

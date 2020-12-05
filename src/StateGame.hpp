@@ -28,6 +28,9 @@ private:
 
     std::vector<std::shared_ptr<jt::SmartShape>> m_walls;
     std::shared_ptr<Player> m_player;
+    std::shared_ptr<jt::SmartShape> m_mapBackground;
+    mutable std::shared_ptr<jt::SmartShape> m_mapWall;
+    std::shared_ptr<jt::SmartShape> m_mapPlayer;
 
     void doCreate() override;
 
@@ -37,6 +40,7 @@ private:
     virtual void doInternalDraw() const override;
 
     void calculateWallScales();
+    void drawMap() const;
 };
 
 #endif

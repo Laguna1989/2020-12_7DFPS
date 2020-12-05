@@ -38,6 +38,8 @@ public:
     static float GetFoVAngle() { return 80.0f; }
 
     static float PlayerTurningSpeed() { return 20.0f; }
+
+    static int MapTileSizeInPixel() { return 3; }
 };
 
 #endif
