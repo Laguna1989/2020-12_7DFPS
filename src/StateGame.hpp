@@ -32,6 +32,9 @@ private:
     mutable std::shared_ptr<jt::SmartShape> m_mapWall;
     std::shared_ptr<jt::SmartShape> m_mapPlayer;
 
+    mutable std::shared_ptr<jt::SmartShape> m_sky;
+    mutable std::shared_ptr<jt::SmartShape> m_floor;
+
     void doCreate() override;
 
     virtual void doCreateInternal();

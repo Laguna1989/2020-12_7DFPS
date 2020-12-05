@@ -90,6 +90,8 @@ void StateGame::doCreate()
 void StateGame::doInternalUpdate(float const elapsed)
 {
     m_background->update(elapsed);
+    m_floor->update(elapsed);
+    m_sky->update(elapsed);
     calculateWallScales();
     for (auto const w : m_walls) {
         w->update(elapsed);
@@ -103,6 +105,8 @@ void StateGame::doInternalUpdate(float const elapsed)
 void StateGame::doInternalDraw() const
 {
     m_background->draw(getGame()->getRenderTarget());
+    m_sky->draw(getGame()->getRenderTarget());
+    m_floor->draw(getGame()->getRenderTarget());
     drawObjects();
     for (auto const w : m_walls) {
         w->draw(getGame()->getRenderTarget());
@@ -127,8 +131,8 @@ void StateGame::doCreateInternal()
     std::reverse(m_walls.begin(), m_walls.end());
 
     m_player = std::make_shared<Player>();
-    m_player->position = jt::vector2 { 18.23f, 3.33f };
-    m_player->angle = 228 + 30;
+    m_player->position = jt::vector2 { 20.8f, 2.1f };
+    m_player->angle = 4;
     add(m_player);
 
     m_mapBackground = std::make_shared<jt::SmartShape>();
@@ -143,6 +147,18 @@ void StateGame::doCreateInternal()
     m_mapPlayer->makeRect({ static_cast<float>(GP::MapTileSizeInPixel()),
         static_cast<float>(GP::MapTileSizeInPixel()) });
     m_mapPlayer->setColor(jt::colors::Red);
+
+    m_sky = std::make_shared<jt::SmartShape>();
+    m_sky->makeRect(jt::vector2 {
+        GP::GetWindowSize().x() / GP::GetZoom(), GP::GetWindowSize().y() / 2.0f / GP::GetZoom() });
+
+    m_sky->setColor(GP::PalletteSky());
+
+    m_floor = std::make_shared<jt::SmartShape>();
+    m_floor->makeRect(jt::vector2 {
+        GP::GetWindowSize().x() / GP::GetZoom(), GP::GetWindowSize().y() / 2.0f / GP::GetZoom() });
+    m_floor->setColor(GP::PalletteFloor());
+    m_floor->setPosition({ 0, GP::GetWindowSize().y() * (0.5f / GP::GetZoom()) });
 }
 
 void StateGame::calculateWallScales()
@@ -227,12 +243,12 @@ void StateGame::calculateWallScales()
             if (lhs > lvs) {
                 d = 0.85f
                     / (abs(dv.x()) * mycos(m_player->angle) + abs(dv.y()) * mysin(m_player->angle));
-                w->setColor(jt::color { 150, 250, 250, 255 });
+                w->setColor(GP::PaletteWallE());
 
             } else {
                 d = 0.85f
                     / (abs(dh.x()) * mycos(m_player->angle) + abs(dh.y()) * mysin(m_player->angle));
-                w->setColor(jt::color { 250, 250, 150, 255 });
+                w->setColor(GP::PaletteWallN());
             }
 
             auto p = w->getPosition();
@@ -297,12 +313,12 @@ void StateGame::calculateWallScales()
             if (lhs > lvs) {
                 d = 0.85f
                     / (abs(dv.x() * mycos(m_player->angle)) + abs(dv.y() * mysin(m_player->angle)));
-                w->setColor(jt::color { 250, 150, 250, 255 });
+                w->setColor(GP::PaletteWallW());
 
             } else {
                 d = 0.85f
                     / (abs(dh.x() * mycos(m_player->angle)) + abs(dh.y() * mysin(m_player->angle)));
-                w->setColor(jt::color { 250, 250, 150, 255 });
+                w->setColor(GP::PaletteWallN());
             }
 
             auto p = w->getPosition();
@@ -366,12 +382,12 @@ void StateGame::calculateWallScales()
             if (lhs > lvs) {
                 d = 0.85f
                     / (abs(dv.x() * mycos(m_player->angle)) + abs(dv.y() * mysin(m_player->angle)));
-                w->setColor(jt::color { 250, 150, 250, 255 });
+                w->setColor(GP::PaletteWallW());
 
             } else {
                 d = 0.85f
                     / (abs(dh.x() * mycos(m_player->angle)) + abs(dh.y() * mysin(m_player->angle)));
-                w->setColor(jt::color { 250, 250, 150, 255 });
+                w->setColor(GP::PaletteWallS());
             }
 
             auto p = w->getPosition();
@@ -380,8 +396,73 @@ void StateGame::calculateWallScales()
             w->setScale({ 1.0f, d });
         } else {
             // bottom right x+, y+
-            w->setScale({ 1.0f, 0.0f });
-            continue;
+            {
+                // horizontal grid intersections
+                float const h1x = (theta == 0) ? x : px + (1 - dy) * mytan(theta - 270);
+                float const h1y = y + 1;
+                float hnx = h1x;
+                float hny = h1y;
+                float const xIncrement = (theta == 0) ? 0 : mytan(theta - 270);
+                float const yIncrement = 1;
+                for (int i = 0; i != 50; ++i) {
+                    int const ttcx = static_cast<int>(hnx);
+                    int const ttcy = static_cast<int>(hny);
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                        break;
+                    }
+                    if (worldMap[ttcy][ttcx]) {
+                        hIntersectionPos = jt::vector2 { hnx, hny };
+                        break;
+                    }
+                    // increase horizontal intersection
+                    hnx += xIncrement;
+                    hny += yIncrement;
+                }
+            }
+            {
+                // vertical grid intersections
+                float const v1x = x + 1;
+                float const v1y = py + (1 - dx) * mytan(360 - theta);
+                float vnx = v1x;
+                float vny = v1y;
+                float xIncrement = 1;
+                float yIncrement = mytan(360 - theta);
+                for (int i = 0; i != 50; ++i) {
+                    int const ttcx = static_cast<int>(vnx);
+                    int const ttcy = static_cast<int>(vny);
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                        break;
+                    }
+                    if (worldMap[ttcy][ttcx]) {
+                        vIntersectionPos = jt::vector2 { vnx, vny };
+                        break;
+                    }
+                    // increase vertical intersection
+                    vnx += xIncrement;
+                    vny += yIncrement;
+                }
+            }
+
+            auto const dh = hIntersectionPos - m_player->position;
+            auto const dv = vIntersectionPos - m_player->position;
+            auto const lhs = jt::MathHelper::lengthSquared(dh);
+            auto const lvs = jt::MathHelper::lengthSquared(dv);
+            float d;
+            if (lhs > lvs) {
+                d = 0.85f
+                    / (abs(dv.x() * mycos(m_player->angle)) + abs(dv.y() * mysin(m_player->angle)));
+                w->setColor(GP::PaletteWallE());
+
+            } else {
+                d = 0.85f
+                    / (abs(dh.x() * mycos(m_player->angle)) + abs(dh.y() * mysin(m_player->angle)));
+                w->setColor(GP::PaletteWallS());
+            }
+
+            auto p = w->getPosition();
+            p.y() = (1.0f - d) * 0.5f * (GP::GetWindowSize().y() / GP::GetZoom());
+            w->setPosition(p);
+            w->setScale({ 1.0f, d });
         }
     }
 }
