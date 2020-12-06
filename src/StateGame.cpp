@@ -136,6 +136,134 @@ void StateGame::doCreateInternal()
     m_floor->setPosition({ 0, GP::GetWindowSize().y() * (0.5f / GP::GetZoom()) });
 }
 
+jt::vector2 getH1(float const theta, float px, float py, float dx, float dy)
+{
+    int const x = static_cast<int>(px);
+    int const y = static_cast<int>(py);
+    if (theta >= 0 && theta < 90) {
+        return jt::vector2 { (theta == 0) ? x : px + dy * mytaninv(theta), static_cast<float>(y) };
+    } else if (theta >= 90 && theta < 180) {
+        return jt::vector2 { (theta == 0) ? x : px - (dy)*mytaninv(180 - theta),
+            static_cast<float>(y) };
+    } else if (theta >= 180 && theta < 270) {
+        return jt::vector2 { (theta == 0) ? x : px - (1 - dy) * mytan(270 - theta), y + 1.0f };
+    } else {
+        return jt::vector2 { (theta == 0) ? x : px + (1 - dy) * mytan(theta - 270), y + 1.0f };
+    }
+}
+
+jt::vector2 getHInc(float const theta)
+{
+    if (theta >= 0 && theta < 90) {
+        return jt::vector2 { (theta == 0) ? 0 : mytaninv(theta), -1.0f };
+    } else if (theta >= 90 && theta < 180) {
+        return jt::vector2 { (theta == 0) ? 0 : mytaninv(theta), -1.0f };
+    } else if (theta >= 180 && theta < 270) {
+        return jt::vector2 { (theta == 0) ? 0 : -mytan(270 - theta), 1.0f };
+    } else {
+        return jt::vector2 { (theta == 0) ? 0 : mytan(theta - 270), 1.0f };
+    }
+}
+
+jt::vector2 getV1(float const theta, float px, float py, float dx, float dy)
+{
+    int const x = static_cast<int>(px);
+    int const y = static_cast<int>(py);
+    if (theta >= 0 && theta < 90) {
+        return jt::vector2 { x + 1.0f, py - (1 - dx) * mytan(theta) };
+    } else if (theta >= 90 && theta < 180) {
+        return jt::vector2 { static_cast<float>(x), py - (dx)*mytan(180 - theta) };
+    } else if (theta >= 180 && theta < 270) {
+        return jt::vector2 { static_cast<float>(x), py + (dx)*mytan(theta - 180) };
+    } else {
+        return jt::vector2 { x + 1.0f, py + (1 - dx) * mytan(360 - theta) };
+    }
+}
+
+jt::vector2 getVInc(float const theta)
+{
+    if (theta >= 0 && theta < 90) {
+        return jt::vector2 { 1, -mytan(theta) };
+    } else if (theta >= 90 && theta < 180) {
+        return jt::vector2 { -1.0f, -mytan(180 - theta) };
+    } else if (theta >= 180 && theta < 270) {
+        return jt::vector2 { -1.0f, mytan(theta - 180) };
+    } else {
+        return jt::vector2 { 1.0f, mytan(360 - theta) };
+    }
+}
+
+int gethttcx(float const theta, float hnx) { return static_cast<int>(hnx); }
+int gethttcy(float const theta, float hny)
+{
+    if (theta >= 0 && theta < 180) {
+        return static_cast<int>(hny) - 1;
+    } else {
+        return static_cast<int>(hny);
+    }
+}
+
+int getvttcx(float const theta, float vnx)
+{
+    if (theta >= 90 && theta < 270) {
+        return static_cast<int>(vnx) - 1;
+    } else {
+        return static_cast<int>(vnx);
+    }
+}
+int getvttcy(float const theta, float vny) { return static_cast<int>(vny); }
+
+void scaleWall(std::shared_ptr<jt::SmartShape> w, jt::vector2 playerPos, float theta, float angle,
+    jt::vector2 hIntersectionPos, jt::vector2 vIntersectionPos)
+{
+    auto const dh = hIntersectionPos - playerPos;
+    auto const dv = vIntersectionPos - playerPos;
+    auto const lhs = jt::MathHelper::lengthSquared(dh);
+    auto const lvs = jt::MathHelper::lengthSquared(dv);
+    float d;
+    if (theta >= 0 && theta < 90) {
+        if (lhs > lvs) {
+            d = 0.85f / (abs(dv.x()) * mycos(angle) + abs(dv.y()) * mysin(angle));
+            w->setColor(GP::PaletteWallE());
+
+        } else {
+            d = 0.85f / (abs(dh.x()) * mycos(angle) + abs(dh.y()) * mysin(angle));
+            w->setColor(GP::PaletteWallN());
+        }
+    } else if (theta >= 90 && theta < 180) {
+        if (lhs > lvs) {
+            d = 0.85f / (abs(dv.x() * mycos(angle)) + abs(dv.y() * mysin(angle)));
+            w->setColor(GP::PaletteWallW());
+
+        } else {
+            d = 0.85f / (abs(dh.x() * mycos(angle)) + abs(dh.y() * mysin(angle)));
+            w->setColor(GP::PaletteWallN());
+        }
+    } else if (theta > 180 && theta < 270) {
+        if (lhs > lvs) {
+            d = 0.85f / (abs(dv.x() * mycos(angle)) + abs(dv.y() * mysin(angle)));
+            w->setColor(GP::PaletteWallW());
+
+        } else {
+            d = 0.85f / (abs(dh.x() * mycos(angle)) + abs(dh.y() * mysin(angle)));
+            w->setColor(GP::PaletteWallS());
+        }
+    } else {
+        if (lhs > lvs) {
+            d = 0.85f / (abs(dv.x() * mycos(angle)) + abs(dv.y() * mysin(angle)));
+            w->setColor(GP::PaletteWallE());
+
+        } else {
+            d = 0.85f / (abs(dh.x() * mycos(angle)) + abs(dh.y() * mysin(angle)));
+            w->setColor(GP::PaletteWallS());
+        }
+    }
+    auto p = w->getPosition();
+    p.y() = (1.0f - d) * 0.5f * (GP::GetWindowSize().y() / GP::GetZoom());
+    w->setPosition(p);
+    w->setScale({ 1.0f, d });
+}
+
 void StateGame::calculateWallScales()
 {
     // player absolut position
@@ -161,292 +289,47 @@ void StateGame::calculateWallScales()
         jt::vector2 vIntersectionPos {};
         jt::vector2 hIntersectionPos {};
 
-        if (theta >= 0 && theta < 90) {
-            // top right x+, y-
-
-            {
-                // horizontal grid intersections
-                float const h1x = (theta == 0) ? x : px + dy * mytaninv(theta);
-                float const h1y = static_cast<float>(y);
-                float hnx = h1x;
-                float hny = h1y;
-                float const xIncrement = (theta == 0) ? 0 : mytaninv(theta);
-                float const yIncrement = -1;
-                for (int i = 0; i != 50; ++i) {
-                    int const ttcx = static_cast<int>(hnx);
-                    int const ttcy = static_cast<int>(hny) - 1;
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
-                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
-                        break;
-                    }
-                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
-                        hIntersectionPos = jt::vector2 { hnx, hny };
-                        break;
-                    }
-                    // increase horizontal intersection
-                    hnx += xIncrement;
-                    hny += yIncrement;
+        {
+            // horizontal grid intersections
+            jt::vector2 hn = getH1(theta, px, py, dx, dy);
+            jt::vector2 const hInc = getHInc(theta);
+            for (int i = 0; i != 50; ++i) {
+                int const ttcx = gethttcx(theta, hn.x());
+                int const ttcy = gethttcy(theta, hn.y());
+                if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
+                    || ttcy >= m_level->getLevelSizeInTiles().y()) {
+                    break;
                 }
-            }
-            {
-                // vertical grid intersections
-                float const v1x = x + 1;
-                float const v1y = py - (1 - dx) * mytan(theta);
-                float vnx = v1x;
-                float vny = v1y;
-                float xIncrement = 1;
-                float yIncrement = -mytan(theta);
-                for (int i = 0; i != 50; ++i) {
-                    int const ttcx = static_cast<int>(vnx);
-                    int const ttcy = static_cast<int>(vny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
-                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
-                        break;
-                    }
-                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
-                        vIntersectionPos = jt::vector2 { vnx, vny };
-                        break;
-                    }
-                    // increase vertical intersection
-                    vnx += xIncrement;
-                    vny += yIncrement;
+                if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
+                    hIntersectionPos = hn;
+                    break;
                 }
+                // increase horizontal intersection
+                hn = hn + hInc;
             }
-            auto const dh = hIntersectionPos - m_player->position;
-            auto const dv = vIntersectionPos - m_player->position;
-            auto const lhs = jt::MathHelper::lengthSquared(dh);
-            auto const lvs = jt::MathHelper::lengthSquared(dv);
-            float d;
-            if (lhs > lvs) {
-                d = 0.85f
-                    / (abs(dv.x()) * mycos(m_player->angle) + abs(dv.y()) * mysin(m_player->angle));
-                w->setColor(GP::PaletteWallE());
-
-            } else {
-                d = 0.85f
-                    / (abs(dh.x()) * mycos(m_player->angle) + abs(dh.y()) * mysin(m_player->angle));
-                w->setColor(GP::PaletteWallN());
-            }
-
-            auto p = w->getPosition();
-            p.y() = (1.0f - d) * 0.5f * (GP::GetWindowSize().y() / GP::GetZoom());
-            w->setPosition(p);
-            w->setScale({ 1.0f, d });
-
-        } else if (theta >= 90 && theta < 180) {
-            // top left x-, y-
-            {
-                // horizontal grid intersections
-                float const h1x = (theta == 0) ? x : px - (dy)*mytaninv(180 - theta);
-                float const h1y = y;
-                float hnx = h1x;
-                float hny = h1y;
-                float const xIncrement = (theta == 0) ? 0 : mytaninv(theta);
-                float const yIncrement = -1;
-                for (int i = 0; i != 50; ++i) {
-                    int const ttcx = static_cast<int>(hnx);
-                    int const ttcy = static_cast<int>(hny) - 1;
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
-                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
-                        break;
-                    }
-                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
-                        hIntersectionPos = jt::vector2 { hnx, hny };
-                        break;
-                    }
-                    // increase horizontal intersection
-                    hnx += xIncrement;
-                    hny += yIncrement;
-                }
-            }
-            {
-                // vertical grid intersections
-                float const v1x = x;
-                float const v1y = py - (dx)*mytan(180 - theta);
-                float vnx = v1x;
-                float vny = v1y;
-                float xIncrement = -1;
-                float yIncrement = -mytan(180 - theta);
-                for (int i = 0; i != 50; ++i) {
-                    int const ttcx = static_cast<int>(vnx) - 1;
-                    int const ttcy = static_cast<int>(vny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
-                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
-                        break;
-                    }
-                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
-                        vIntersectionPos = jt::vector2 { vnx, vny };
-                        break;
-                    }
-                    // increase vertical intersection
-                    vnx += xIncrement;
-                    vny += yIncrement;
-                }
-            }
-
-            auto const dh = hIntersectionPos - m_player->position;
-            auto const dv = vIntersectionPos - m_player->position;
-            auto const lhs = jt::MathHelper::lengthSquared(dh);
-            auto const lvs = jt::MathHelper::lengthSquared(dv);
-            float d;
-            if (lhs > lvs) {
-                d = 0.85f
-                    / (abs(dv.x() * mycos(m_player->angle)) + abs(dv.y() * mysin(m_player->angle)));
-                w->setColor(GP::PaletteWallW());
-
-            } else {
-                d = 0.85f
-                    / (abs(dh.x() * mycos(m_player->angle)) + abs(dh.y() * mysin(m_player->angle)));
-                w->setColor(GP::PaletteWallN());
-            }
-
-            auto p = w->getPosition();
-            p.y() = (1.0f - d) * 0.5f * (GP::GetWindowSize().y() / GP::GetZoom());
-            w->setPosition(p);
-            w->setScale({ 1.0f, d });
-        } else if (theta > 180 && theta < 270) {
-            // bottom left x-, y+
-            {
-                // horizontal grid intersections
-                float const h1x = (theta == 0) ? x : px - (1 - dy) * mytan(270 - theta);
-                float const h1y = y + 1;
-                float hnx = h1x;
-                float hny = h1y;
-                float const xIncrement = (theta == 0) ? 0 : -mytan(270 - theta);
-                float const yIncrement = 1;
-                for (int i = 0; i != 50; ++i) {
-                    int const ttcx = static_cast<int>(hnx);
-                    int const ttcy = static_cast<int>(hny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
-                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
-                        break;
-                    }
-                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
-                        hIntersectionPos = jt::vector2 { hnx, hny };
-                        break;
-                    }
-                    // increase horizontal intersection
-                    hnx += xIncrement;
-                    hny += yIncrement;
-                }
-            }
-            {
-                // vertical grid intersections
-                float const v1x = x;
-                float const v1y = py + (dx)*mytan(theta - 180);
-                float vnx = v1x;
-                float vny = v1y;
-                float xIncrement = -1;
-                float yIncrement = mytan(theta - 180);
-                for (int i = 0; i != 50; ++i) {
-                    int const ttcx = static_cast<int>(vnx) - 1;
-                    int const ttcy = static_cast<int>(vny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
-                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
-                        break;
-                    }
-                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
-                        vIntersectionPos = jt::vector2 { vnx, vny };
-                        break;
-                    }
-                    // increase vertical intersection
-                    vnx += xIncrement;
-                    vny += yIncrement;
-                }
-            }
-
-            auto const dh = hIntersectionPos - m_player->position;
-            auto const dv = vIntersectionPos - m_player->position;
-            auto const lhs = jt::MathHelper::lengthSquared(dh);
-            auto const lvs = jt::MathHelper::lengthSquared(dv);
-            float d;
-            if (lhs > lvs) {
-                d = 0.85f
-                    / (abs(dv.x() * mycos(m_player->angle)) + abs(dv.y() * mysin(m_player->angle)));
-                w->setColor(GP::PaletteWallW());
-
-            } else {
-                d = 0.85f
-                    / (abs(dh.x() * mycos(m_player->angle)) + abs(dh.y() * mysin(m_player->angle)));
-                w->setColor(GP::PaletteWallS());
-            }
-
-            auto p = w->getPosition();
-            p.y() = (1.0f - d) * 0.5f * (GP::GetWindowSize().y() / GP::GetZoom());
-            w->setPosition(p);
-            w->setScale({ 1.0f, d });
-        } else {
-            // bottom right x+, y+
-            {
-                // horizontal grid intersections
-                float const h1x = (theta == 0) ? x : px + (1 - dy) * mytan(theta - 270);
-                float const h1y = y + 1;
-                float hnx = h1x;
-                float hny = h1y;
-                float const xIncrement = (theta == 0) ? 0 : mytan(theta - 270);
-                float const yIncrement = 1;
-                for (int i = 0; i != 50; ++i) {
-                    int const ttcx = static_cast<int>(hnx);
-                    int const ttcy = static_cast<int>(hny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
-                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
-                        break;
-                    }
-                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
-                        hIntersectionPos = jt::vector2 { hnx, hny };
-                        break;
-                    }
-                    // increase horizontal intersection
-                    hnx += xIncrement;
-                    hny += yIncrement;
-                }
-            }
-            {
-                // vertical grid intersections
-                float const v1x = x + 1;
-                float const v1y = py + (1 - dx) * mytan(360 - theta);
-                float vnx = v1x;
-                float vny = v1y;
-                float xIncrement = 1;
-                float yIncrement = mytan(360 - theta);
-                for (int i = 0; i != 50; ++i) {
-                    int const ttcx = static_cast<int>(vnx);
-                    int const ttcy = static_cast<int>(vny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
-                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
-                        break;
-                    }
-                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
-                        vIntersectionPos = jt::vector2 { vnx, vny };
-                        break;
-                    }
-                    // increase vertical intersection
-                    vnx += xIncrement;
-                    vny += yIncrement;
-                }
-            }
-
-            auto const dh = hIntersectionPos - m_player->position;
-            auto const dv = vIntersectionPos - m_player->position;
-            auto const lhs = jt::MathHelper::lengthSquared(dh);
-            auto const lvs = jt::MathHelper::lengthSquared(dv);
-            float d;
-            if (lhs > lvs) {
-                d = 0.85f
-                    / (abs(dv.x() * mycos(m_player->angle)) + abs(dv.y() * mysin(m_player->angle)));
-                w->setColor(GP::PaletteWallE());
-
-            } else {
-                d = 0.85f
-                    / (abs(dh.x() * mycos(m_player->angle)) + abs(dh.y() * mysin(m_player->angle)));
-                w->setColor(GP::PaletteWallS());
-            }
-
-            auto p = w->getPosition();
-            p.y() = (1.0f - d) * 0.5f * (GP::GetWindowSize().y() / GP::GetZoom());
-            w->setPosition(p);
-            w->setScale({ 1.0f, d });
         }
+        {
+            // vertical grid intersections
+            jt::vector2 vn = getV1(theta, px, py, dx, dy);
+            jt::vector2 const vInc = getVInc(theta);
+            for (int i = 0; i != 50; ++i) {
+                int const ttcx = getvttcx(theta, vn.x());
+                int const ttcy = getvttcy(theta, vn.y());
+                if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
+                    || ttcy >= m_level->getLevelSizeInTiles().y()) {
+                    break;
+                }
+                if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
+                    vIntersectionPos = vn;
+                    break;
+                }
+                // increase vertical intersection
+                vn = vn + vInc;
+            }
+        }
+
+        scaleWall(
+            w, m_player->position, theta, m_player->angle, hIntersectionPos, vIntersectionPos);
     }
 }
 
