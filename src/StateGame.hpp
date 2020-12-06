@@ -2,6 +2,7 @@
 #define GAME_STATE_GAME_HPP_INCLUDEGUARD
 
 #include "GameState.hpp"
+#include "Level.hpp"
 #include "Player.hpp"
 #include <iostream>
 #include <memory>
@@ -34,6 +35,8 @@ private:
 
     mutable std::shared_ptr<jt::SmartShape> m_sky;
     mutable std::shared_ptr<jt::SmartShape> m_floor;
+
+    std::shared_ptr<Level> m_level;
 
     void doCreate() override;
 

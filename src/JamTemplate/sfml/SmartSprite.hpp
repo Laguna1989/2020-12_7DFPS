@@ -3,6 +3,7 @@
 
 #include "SmartDrawable.hpp"
 #include "TextureManager.hpp"
+#include "color.hpp"
 #include "rendertarget.hpp"
 #include <SFML/Graphics.hpp>
 #include <memory>
@@ -57,6 +58,12 @@ public:
     }
 
     virtual jt::vector2 const getOrigin() const { return m_sprite.getOrigin(); }
+
+    jt::color getColorAtPixel(jt::vector2u pixelPos) const
+    {
+        return jt::color { m_sprite.getTexture()->copyToImage().getPixel(
+            pixelPos.x(), pixelPos.y()) };
+    }
 
 private:
     mutable sf::Sprite m_sprite;

@@ -28,35 +28,6 @@ float wrapAngle(float a)
     }
     return a;
 }
-
-#define mapWidth 24
-#define mapHeight 24
-// TODO Load from image instead of hardcoded map
-int worldMap[mapWidth][mapHeight]
-    = { { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-          { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 } };
 } // namespace
 
 void StateGame::doCreate()
@@ -97,7 +68,7 @@ void StateGame::doInternalUpdate(float const elapsed)
         w->update(elapsed);
     }
     m_overlay->update(elapsed);
-    m_mapPlayer->setPosition(m_player->position * GP::MapTileSizeInPixel());
+    m_mapPlayer->setPosition(m_player->position * static_cast<float>(GP::MapTileSizeInPixel()));
     m_mapPlayer->update(elapsed);
     m_mapBackground->update(elapsed);
 }
@@ -131,13 +102,17 @@ void StateGame::doCreateInternal()
     std::reverse(m_walls.begin(), m_walls.end());
 
     m_player = std::make_shared<Player>();
-    m_player->position = jt::vector2 { 20.8f, 2.1f };
-    m_player->angle = 4;
     add(m_player);
 
+    m_level = std::make_shared<Level>();
+    m_level->loadLevel("assets/level1.png");
+    m_player->position = m_level->getPlayerStartPositionInTiles();
+    m_player->angle = m_level->getPlayerStartAngle();
+
     m_mapBackground = std::make_shared<jt::SmartShape>();
-    m_mapBackground->makeRect({ static_cast<float>(mapWidth * GP::MapTileSizeInPixel()),
-        static_cast<float>(mapHeight * GP::MapTileSizeInPixel()) });
+    m_mapBackground->makeRect(
+        { static_cast<float>(m_level->getLevelSizeInTiles().x() * GP::MapTileSizeInPixel()),
+            static_cast<float>(m_level->getLevelSizeInTiles().y() * GP::MapTileSizeInPixel()) });
     m_mapBackground->setColor(jt::colors::Cyan);
     m_mapWall = std::make_shared<jt::SmartShape>();
     m_mapWall->makeRect({ static_cast<float>(GP::MapTileSizeInPixel()),
@@ -192,7 +167,7 @@ void StateGame::calculateWallScales()
             {
                 // horizontal grid intersections
                 float const h1x = (theta == 0) ? x : px + dy * mytaninv(theta);
-                float const h1y = y;
+                float const h1y = static_cast<float>(y);
                 float hnx = h1x;
                 float hny = h1y;
                 float const xIncrement = (theta == 0) ? 0 : mytaninv(theta);
@@ -200,10 +175,11 @@ void StateGame::calculateWallScales()
                 for (int i = 0; i != 50; ++i) {
                     int const ttcx = static_cast<int>(hnx);
                     int const ttcy = static_cast<int>(hny) - 1;
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
+                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
                         break;
                     }
-                    if (worldMap[ttcy][ttcx]) {
+                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
                         hIntersectionPos = jt::vector2 { hnx, hny };
                         break;
                     }
@@ -223,10 +199,11 @@ void StateGame::calculateWallScales()
                 for (int i = 0; i != 50; ++i) {
                     int const ttcx = static_cast<int>(vnx);
                     int const ttcy = static_cast<int>(vny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
+                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
                         break;
                     }
-                    if (worldMap[ttcy][ttcx]) {
+                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
                         vIntersectionPos = jt::vector2 { vnx, vny };
                         break;
                     }
@@ -269,10 +246,11 @@ void StateGame::calculateWallScales()
                 for (int i = 0; i != 50; ++i) {
                     int const ttcx = static_cast<int>(hnx);
                     int const ttcy = static_cast<int>(hny) - 1;
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
+                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
                         break;
                     }
-                    if (worldMap[ttcy][ttcx]) {
+                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
                         hIntersectionPos = jt::vector2 { hnx, hny };
                         break;
                     }
@@ -292,10 +270,11 @@ void StateGame::calculateWallScales()
                 for (int i = 0; i != 50; ++i) {
                     int const ttcx = static_cast<int>(vnx) - 1;
                     int const ttcy = static_cast<int>(vny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
+                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
                         break;
                     }
-                    if (worldMap[ttcy][ttcx]) {
+                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
                         vIntersectionPos = jt::vector2 { vnx, vny };
                         break;
                     }
@@ -338,10 +317,11 @@ void StateGame::calculateWallScales()
                 for (int i = 0; i != 50; ++i) {
                     int const ttcx = static_cast<int>(hnx);
                     int const ttcy = static_cast<int>(hny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
+                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
                         break;
                     }
-                    if (worldMap[ttcy][ttcx]) {
+                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
                         hIntersectionPos = jt::vector2 { hnx, hny };
                         break;
                     }
@@ -361,10 +341,11 @@ void StateGame::calculateWallScales()
                 for (int i = 0; i != 50; ++i) {
                     int const ttcx = static_cast<int>(vnx) - 1;
                     int const ttcy = static_cast<int>(vny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
+                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
                         break;
                     }
-                    if (worldMap[ttcy][ttcx]) {
+                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
                         vIntersectionPos = jt::vector2 { vnx, vny };
                         break;
                     }
@@ -407,10 +388,11 @@ void StateGame::calculateWallScales()
                 for (int i = 0; i != 50; ++i) {
                     int const ttcx = static_cast<int>(hnx);
                     int const ttcy = static_cast<int>(hny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
+                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
                         break;
                     }
-                    if (worldMap[ttcy][ttcx]) {
+                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
                         hIntersectionPos = jt::vector2 { hnx, hny };
                         break;
                     }
@@ -430,10 +412,11 @@ void StateGame::calculateWallScales()
                 for (int i = 0; i != 50; ++i) {
                     int const ttcx = static_cast<int>(vnx);
                     int const ttcy = static_cast<int>(vny);
-                    if (ttcx < 0 || ttcy < 0 || ttcx >= mapWidth || ttcy >= mapHeight) {
+                    if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
+                        || ttcy >= m_level->getLevelSizeInTiles().y()) {
                         break;
                     }
-                    if (worldMap[ttcy][ttcx]) {
+                    if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
                         vIntersectionPos = jt::vector2 { vnx, vny };
                         break;
                     }
@@ -473,9 +456,9 @@ void StateGame::drawMap() const
 
     m_mapPlayer->draw(getGame()->getRenderTarget());
 
-    for (size_t i = 0U; i != mapWidth; ++i) {
-        for (size_t j = 0U; j != mapHeight; ++j) {
-            if (worldMap[j][i]) {
+    for (size_t i = 0U; i != m_level->getLevelSizeInTiles().x(); ++i) {
+        for (size_t j = 0U; j != m_level->getLevelSizeInTiles().y(); ++j) {
+            if (m_level->getTileTypeAt(i, j) == Level::TileType::WALL) {
                 m_mapWall->setPosition(
                     { 1.0f * i * GP::MapTileSizeInPixel(), 1.0f * j * GP::MapTileSizeInPixel() });
                 m_mapWall->update(0.0f);

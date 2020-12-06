@@ -4,10 +4,12 @@
 #include "GameObject.hpp"
 #include "vector.hpp"
 
-struct Player : public jt::GameObject {
+class Player : public jt::GameObject {
+public:
     jt::vector2 position;
     float angle;
 
+private:
     void doUpdate(float elapsed) override;
 };
 
