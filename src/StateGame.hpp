@@ -1,6 +1,7 @@
 ﻿#ifndef GAME_STATE_GAME_HPP_INCLUDEGUARD
 #define GAME_STATE_GAME_HPP_INCLUDEGUARD
 
+#include "Enemy.hpp"
 #include "GameState.hpp"
 #include "Level.hpp"
 #include "Player.hpp"
@@ -35,6 +36,8 @@ private:
 
     mutable std::shared_ptr<jt::SmartShape> m_sky;
     mutable std::shared_ptr<jt::SmartShape> m_floor;
+
+    std::vector<std::shared_ptr<Enemy>> m_enemies;
 
     std::shared_ptr<b2World> m_world { nullptr };
 
