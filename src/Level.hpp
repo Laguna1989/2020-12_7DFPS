@@ -1,6 +1,7 @@
 ﻿#ifndef LEVEL_GUARD_HPP
 #define LEVEL_GUARD_HPP
 
+#include "Box2DObject.hpp"
 #include "SmartSprite.hpp"
 #include <cstdint>
 #include <memory>
@@ -10,11 +11,16 @@
 // fwd decl
 class Player;
 
+class Wall : public jt::Box2DObject {
+public:
+    Wall(std::shared_ptr<b2World> world, b2BodyDef const* def);
+};
+
 class Level {
 public:
     enum class TileType : std::uint8_t { EMPTY, WALL };
 
-    void loadLevel(std::string const& fileName);
+    void loadLevel(std::string const& fileName, std::shared_ptr<b2World> world);
 
     TileType getTileTypeAt(unsigned int x, unsigned int y) const;
 

@@ -21,9 +21,9 @@ float wrapAngle(float a)
         while (a < 0) {
             a += 360;
         }
-    } else if (a >= 360.0f) {
-        while (a >= 360) {
-            a += 360;
+    } else if (a > 360.0f) {
+        while (a > 360) {
+            a -= 360;
         }
     }
     return a;
@@ -110,7 +110,7 @@ void StateGame::doCreateInternal()
     std::reverse(m_walls.begin(), m_walls.end());
 
     m_level = std::make_shared<Level>();
-    m_level->loadLevel("assets/level1.png");
+    m_level->loadLevel("assets/level1.png", m_world);
 
     b2BodyDef playerBodyDef;
     playerBodyDef.type = b2_dynamicBody;
@@ -281,8 +281,8 @@ void scaleWall(std::shared_ptr<jt::SmartShape> w, jt::vector2 playerPos, float t
 void StateGame::calculateWallScales()
 {
     // player absolut position
-    float const px = m_player->getPosition().x();
-    float const py = m_player->getPosition().y();
+    float const px = m_player->getPosition().x() + 0.45f;
+    float const py = m_player->getPosition().y() + 0.45f;
 
     // player position in full tiles
     int x = static_cast<int>(px);

@@ -12,8 +12,7 @@ Player::Player(std::shared_ptr<b2World> world, const b2BodyDef* def)
     : Box2DObject { world, def }
 {
     b2PolygonShape dynamicBox;
-    dynamicBox.SetAsBox(static_cast<float>(GP::MapTileSizeInPixel() / 2),
-        static_cast<float>(GP::MapTileSizeInPixel() / 2));
+    dynamicBox.SetAsBox(0.5f, 0.5f);
 
     b2FixtureDef fixtureDef;
     fixtureDef.shape = &dynamicBox;
@@ -41,16 +40,19 @@ void Player::doUpdate(float elapsed)
     }
 
     auto v = vec(getB2Body()->GetLinearVelocity());
+    // velocity dampening
     v.x() *= GP::PlayerVelocityDamping();
     v.y() *= GP::PlayerVelocityDamping();
+    // get rid of denormalized floats
     if (abs(v.x()) < 0.001f) {
         v.x() = 0;
     }
     if (abs(v.y()) < 0.001f) {
         v.y() = 0;
     }
+
+    // clamp velocity
     auto l = jt::MathHelper::length(v);
-    std::cout << l << std::endl;
     if (l >= GP::PlayerMaxSpeed()) {
         v = v * (GP::PlayerMaxSpeed() / l);
     }

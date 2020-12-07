@@ -46,8 +46,8 @@ public:
     static float GetFoVAngle() { return 60.0f; }
 
     static float PlayerTurningSpeed() { return 45.0f; }
-    static float PlayerAccelerationFactor() { return 250.0f; }
-    static float PlayerMaxSpeed() { return 1.5f; }
+    static float PlayerAccelerationFactor() { return 115.0f; }
+    static float PlayerMaxSpeed() { return 0.25f; }
     static float PlayerVelocityDamping() { return 0.90f; }
 
     static int MapTileSizeInPixel() { return 4; }

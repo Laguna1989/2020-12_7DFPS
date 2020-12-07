@@ -59,6 +59,8 @@ public:
 
     virtual jt::vector2 const getOrigin() const { return m_sprite.getOrigin(); }
 
+    // WARNING: This function is slow, because it needs to copy
+    // graphics memory to ram first.
     jt::color getColorAtPixel(jt::vector2u pixelPos) const
     {
         return jt::color { m_sprite.getTexture()->copyToImage().getPixel(

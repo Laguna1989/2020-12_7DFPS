@@ -1,7 +1,20 @@
 ﻿#include "Level.hpp"
+#include "GameProperties.hpp"
 #include "Player.hpp"
 
-void Level::loadLevel(std::string const& fileName)
+Wall::Wall(std::shared_ptr<b2World> world, b2BodyDef const* def)
+    : Box2DObject { world, def }
+{
+    b2PolygonShape box;
+    box.SetAsBox(0.25f, 0.25f);
+
+    b2FixtureDef fixtureDef;
+    fixtureDef.shape = &box;
+
+    getB2Body()->CreateFixture(&fixtureDef);
+}
+
+void Level::loadLevel(std::string const& fileName, std::shared_ptr<b2World> world)
 {
     auto level = std::make_shared<jt::SmartSprite>();
     level->loadSprite(fileName);
@@ -9,11 +22,18 @@ void Level::loadLevel(std::string const& fileName)
     m_levelSize = jt::vector2u { static_cast<unsigned int>(level->getLocalBounds().width()),
         static_cast<unsigned int>(level->getLocalBounds().height()) };
     m_levelVec.resize(m_levelSize.x() * m_levelSize.y());
+
+    b2BodyDef wallBodyDef;
+    wallBodyDef.type = b2_staticBody;
+    wallBodyDef.fixedRotation = true;
+
     for (unsigned int j = 0; j != m_levelSize.y(); ++j) {
         for (unsigned int i = 0; i != m_levelSize.x(); ++i) {
             auto const c = level->getColorAtPixel({ i, j });
             if (c == jt::colors::White) {
                 m_levelVec.at(posToIndex(i, j)) = Level::TileType::WALL;
+                wallBodyDef.position = b2Vec2 { static_cast<float>(i), static_cast<float>(j) };
+                Wall const w { world, &wallBodyDef };
             } else {
                 if (c.r() == 0 && c.g() == 255) {
                     m_playerStart = jt::vector2u { i, j };
