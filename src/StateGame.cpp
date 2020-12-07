@@ -4,31 +4,13 @@
 #include "Hud.hpp"
 #include "InputManager.hpp"
 #include "MathHelper.hpp"
+#include "Renderer.hpp"
 #include "SmartShape.hpp"
 #include "SmartSprite.hpp"
 #include "TweenAlpha.hpp"
 #include "color.hpp"
 #include <algorithm>
-
-namespace {
-float mytan(float a) { return std::tan(jt::MathHelper::deg2rad(a)); }
-float mytaninv(float a) { return (1.0f / std::tan(jt::MathHelper::deg2rad(a))); }
-float mycos(float a) { return std::cos(jt::MathHelper::deg2rad(a)); }
-float mysin(float a) { return std::sin(jt::MathHelper::deg2rad(a)); }
-float wrapAngle(float a)
-{
-    if (a < 0) {
-        while (a < 0) {
-            a += 360;
-        }
-    } else if (a > 360.0f) {
-        while (a > 360) {
-            a -= 360;
-        }
-    }
-    return a;
-}
-} // namespace
+#include <map>
 
 StateGame::StateGame() { m_world = std::make_shared<b2World>(b2Vec2 { 0, 0 }); }
 
@@ -58,41 +40,6 @@ void StateGame::doCreate()
 
     m_hud = std::make_shared<Hud>();
     add(m_hud);
-}
-
-void StateGame::doInternalUpdate(float const elapsed)
-{
-    m_background->update(elapsed);
-    m_floor->update(elapsed);
-    m_sky->update(elapsed);
-
-    int32 velocityIterations = 6;
-    int32 positionIterations = 2;
-    m_world->Step(elapsed, velocityIterations, positionIterations);
-
-    calculateWallScales();
-    for (auto const w : m_walls) {
-        w->update(elapsed);
-    }
-    m_overlay->update(elapsed);
-    m_mapPlayer->setPosition(
-        m_player->getPosition() * static_cast<float>(GP::MapTileSizeInPixel()));
-    m_mapPlayer->update(elapsed);
-    m_mapBackground->update(elapsed);
-}
-
-void StateGame::doInternalDraw() const
-{
-    m_background->draw(getGame()->getRenderTarget());
-    m_sky->draw(getGame()->getRenderTarget());
-    m_floor->draw(getGame()->getRenderTarget());
-    drawObjects();
-    for (auto const w : m_walls) {
-        w->draw(getGame()->getRenderTarget());
-    }
-
-    drawMap();
-    m_overlay->draw(getGame()->getRenderTarget());
 }
 
 void StateGame::doCreateInternal()
@@ -148,205 +95,72 @@ void StateGame::doCreateInternal()
         GP::GetWindowSize().x() / GP::GetZoom(), GP::GetWindowSize().y() / 2.0f / GP::GetZoom() });
     m_floor->setColor(GP::PalletteFloor());
     m_floor->setPosition({ 0, GP::GetWindowSize().y() * (0.5f / GP::GetZoom()) });
+
+    playerBodyDef.position = b2Vec2 { 5.0f, 12.0f };
+    auto e = std::make_shared<Enemy>(m_world, &playerBodyDef);
+
+    add(e);
+    /*   e->getAnimation()->setPosition({ 100, 150 });*/
+    m_enemies.push_back(e);
 }
 
-jt::vector2 getH1(float const theta, float px, float py, float dx, float dy)
+void StateGame::doInternalUpdate(float const elapsed)
 {
-    int const x = static_cast<int>(px);
-    int const y = static_cast<int>(py);
-    if (theta >= 0 && theta < 90) {
-        return jt::vector2 { (theta == 0) ? x : px + dy * mytaninv(theta), static_cast<float>(y) };
-    } else if (theta >= 90 && theta < 180) {
-        return jt::vector2 { (theta == 0) ? x : px - (dy)*mytaninv(180 - theta),
-            static_cast<float>(y) };
-    } else if (theta >= 180 && theta < 270) {
-        return jt::vector2 { (theta == 0) ? x : px - (1 - dy) * mytan(270 - theta), y + 1.0f };
-    } else {
-        return jt::vector2 { (theta == 0) ? x : px + (1 - dy) * mytan(theta - 270), y + 1.0f };
+    m_background->update(elapsed);
+    m_floor->update(elapsed);
+    m_sky->update(elapsed);
+
+    int32 velocityIterations = 6;
+    int32 positionIterations = 2;
+    m_world->Step(elapsed, velocityIterations, positionIterations);
+
+    calculateWallScales();
+    for (auto const w : m_walls) {
+        w->update(elapsed);
     }
-}
 
-jt::vector2 getHInc(float const theta)
-{
-    if (theta >= 0 && theta < 90) {
-        return jt::vector2 { (theta == 0) ? 0 : mytaninv(theta), -1.0f };
-    } else if (theta >= 90 && theta < 180) {
-        return jt::vector2 { (theta == 0) ? 0 : mytaninv(theta), -1.0f };
-    } else if (theta >= 180 && theta < 270) {
-        return jt::vector2 { (theta == 0) ? 0 : -mytan(270 - theta), 1.0f };
-    } else {
-        return jt::vector2 { (theta == 0) ? 0 : mytan(theta - 270), 1.0f };
+    for (auto const e : m_enemies) {
+        ::calculateSpriteScale(
+            m_player->getPosition(), m_player->angle, e->getPosition(), e->getAnimation());
+        e->update(elapsed);
     }
+
+    m_overlay->update(elapsed);
+    m_mapPlayer->setPosition(
+        m_player->getPosition() * static_cast<float>(GP::MapTileSizeInPixel()));
+    m_mapPlayer->update(elapsed);
+    m_mapBackground->update(elapsed);
 }
 
-jt::vector2 getV1(float const theta, float px, float py, float dx, float dy)
+void StateGame::doInternalDraw() const
 {
-    int const x = static_cast<int>(px);
-    int const y = static_cast<int>(py);
-    if (theta >= 0 && theta < 90) {
-        return jt::vector2 { x + 1.0f, py - (1 - dx) * mytan(theta) };
-    } else if (theta >= 90 && theta < 180) {
-        return jt::vector2 { static_cast<float>(x), py - (dx)*mytan(180 - theta) };
-    } else if (theta >= 180 && theta < 270) {
-        return jt::vector2 { static_cast<float>(x), py + (dx)*mytan(theta - 180) };
-    } else {
-        return jt::vector2 { x + 1.0f, py + (1 - dx) * mytan(360 - theta) };
+    m_background->draw(getGame()->getRenderTarget());
+    m_sky->draw(getGame()->getRenderTarget());
+    m_floor->draw(getGame()->getRenderTarget());
+    drawObjects();
+
+    std::map<float, std::vector<std::shared_ptr<jt::SmartDrawable>>> zMap;
+
+    for (auto const w : m_walls) {
+        zMap[-w->getZDist()].push_back(w);
     }
-}
-
-jt::vector2 getVInc(float const theta)
-{
-    if (theta >= 0 && theta < 90) {
-        return jt::vector2 { 1, -mytan(theta) };
-    } else if (theta >= 90 && theta < 180) {
-        return jt::vector2 { -1.0f, -mytan(180 - theta) };
-    } else if (theta >= 180 && theta < 270) {
-        return jt::vector2 { -1.0f, mytan(theta - 180) };
-    } else {
-        return jt::vector2 { 1.0f, mytan(360 - theta) };
+    for (auto const e : m_enemies) {
+        zMap[-e->getAnimation()->getZDist()].push_back(e->getAnimation());
     }
-}
 
-int gethttcx(float const theta, float hnx) { return static_cast<int>(hnx); }
-int gethttcy(float const theta, float hny)
-{
-    if (theta >= 0 && theta < 180) {
-        return static_cast<int>(hny) - 1;
-    } else {
-        return static_cast<int>(hny);
-    }
-}
-
-int getvttcx(float const theta, float vnx)
-{
-    if (theta >= 90 && theta < 270) {
-        return static_cast<int>(vnx) - 1;
-    } else {
-        return static_cast<int>(vnx);
-    }
-}
-int getvttcy(float const theta, float vny) { return static_cast<int>(vny); }
-
-void scaleWall(std::shared_ptr<jt::SmartShape> w, jt::vector2 playerPos, float theta, float angle,
-    jt::vector2 hIntersectionPos, jt::vector2 vIntersectionPos)
-{
-    auto const dh = hIntersectionPos - playerPos;
-    auto const dv = vIntersectionPos - playerPos;
-    auto const lhs = jt::MathHelper::lengthSquared(dh);
-    auto const lvs = jt::MathHelper::lengthSquared(dv);
-    float d;
-    if (theta >= 0 && theta < 90) {
-        if (lhs > lvs) {
-            d = 0.85f / (abs(dv.x()) * mycos(angle) + abs(dv.y()) * mysin(angle));
-            w->setColor(GP::PaletteWallE());
-
-        } else {
-            d = 0.85f / (abs(dh.x()) * mycos(angle) + abs(dh.y()) * mysin(angle));
-            w->setColor(GP::PaletteWallN());
-        }
-    } else if (theta >= 90 && theta < 180) {
-        if (lhs > lvs) {
-            d = 0.85f / (abs(dv.x() * mycos(angle)) + abs(dv.y() * mysin(angle)));
-            w->setColor(GP::PaletteWallW());
-
-        } else {
-            d = 0.85f / (abs(dh.x() * mycos(angle)) + abs(dh.y() * mysin(angle)));
-            w->setColor(GP::PaletteWallN());
-        }
-    } else if (theta > 180 && theta < 270) {
-        if (lhs > lvs) {
-            d = 0.85f / (abs(dv.x() * mycos(angle)) + abs(dv.y() * mysin(angle)));
-            w->setColor(GP::PaletteWallW());
-
-        } else {
-            d = 0.85f / (abs(dh.x() * mycos(angle)) + abs(dh.y() * mysin(angle)));
-            w->setColor(GP::PaletteWallS());
-        }
-    } else {
-        if (lhs > lvs) {
-            d = 0.85f / (abs(dv.x() * mycos(angle)) + abs(dv.y() * mysin(angle)));
-            w->setColor(GP::PaletteWallE());
-
-        } else {
-            d = 0.85f / (abs(dh.x() * mycos(angle)) + abs(dh.y() * mysin(angle)));
-            w->setColor(GP::PaletteWallS());
+    for (auto const& kvp : zMap) {
+        for (auto p : kvp.second) {
+            p->draw(getGame()->getRenderTarget());
         }
     }
-    auto p = w->getPosition();
-    p.y() = (1.0f - d) * 0.5f * (GP::GetWindowSize().y() / GP::GetZoom());
-    w->setPosition(p);
-    w->setScale({ 1.0f, d });
+
+    drawMap();
+    m_overlay->draw(getGame()->getRenderTarget());
 }
 
 void StateGame::calculateWallScales()
 {
-    // player absolut position
-    float const px = m_player->getPosition().x() + 0.45f;
-    float const py = m_player->getPosition().y() + 0.45f;
-
-    // player position in full tiles
-    int x = static_cast<int>(px);
-    int y = static_cast<int>(py);
-
-    // player offset in tile
-    float const dx = px - x;
-    float const dy = py - y;
-
-    float const angleIncrement = GP::GetFoVAngle() / GP::GetDivisions();
-    float const angleStart = m_player->angle - GP::GetFoVAngle() * 0.5f;
-
-    for (auto i = 0U; i != GP::GetDivisions(); ++i) {
-        // ray direction
-        float const theta = wrapAngle(angleStart + i * angleIncrement);
-        auto w = m_walls.at(i);
-
-        jt::vector2 vIntersectionPos {};
-        jt::vector2 hIntersectionPos {};
-
-        {
-            // horizontal grid intersections
-            jt::vector2 hn = getH1(theta, px, py, dx, dy);
-            jt::vector2 const hInc = getHInc(theta);
-            for (int i = 0; i != 50; ++i) {
-                int const ttcx = gethttcx(theta, hn.x());
-                int const ttcy = gethttcy(theta, hn.y());
-                if (ttcx < 0 || ttcy < 0
-                    || ttcx >= static_cast<int>(m_level->getLevelSizeInTiles().x())
-                    || ttcy >= static_cast<int>(m_level->getLevelSizeInTiles().y())) {
-                    break;
-                }
-                if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
-                    hIntersectionPos = hn;
-                    break;
-                }
-                // increase horizontal intersection
-                hn = hn + hInc;
-            }
-        }
-        {
-            // vertical grid intersections
-            jt::vector2 vn = getV1(theta, px, py, dx, dy);
-            jt::vector2 const vInc = getVInc(theta);
-            for (int i = 0; i != 50; ++i) {
-                int const ttcx = getvttcx(theta, vn.x());
-                int const ttcy = getvttcy(theta, vn.y());
-                if (ttcx < 0 || ttcy < 0
-                    || ttcx >= static_cast<int>(m_level->getLevelSizeInTiles().x())
-                    || ttcy >= static_cast<int>(m_level->getLevelSizeInTiles().y())) {
-                    break;
-                }
-                if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
-                    vIntersectionPos = vn;
-                    break;
-                }
-                // increase vertical intersection
-                vn = vn + vInc;
-            }
-        }
-
-        scaleWall(
-            w, m_player->getPosition(), theta, m_player->angle, hIntersectionPos, vIntersectionPos);
-    }
+    ::calculateWallScales(m_player->getPosition(), m_player->angle, m_level, m_walls);
 }
 
 void StateGame::drawMap() const

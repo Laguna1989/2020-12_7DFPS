@@ -41,9 +41,10 @@ public:
     static float GetZoom() { return 2.0f; }
     static std::size_t GetDivisions()
     {
-        return static_cast<std::size_t>(ceil(GetWindowSize().x() / GetZoom())) / 1;
+        return static_cast<std::size_t>(ceil(GetWindowSize().x() / GetZoom())) / 10;
     }
     static float GetFoVAngle() { return 60.0f; }
+    static float GP::SpriteScale() { return 8.0f; }
 
     static float PlayerTurningSpeed() { return 45.0f; }
     static float PlayerAccelerationFactor() { return 115.0f; }
