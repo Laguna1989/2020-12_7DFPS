@@ -30,6 +30,8 @@ float wrapAngle(float a)
 }
 } // namespace
 
+StateGame::StateGame() { m_world = std::make_shared<b2World>(b2Vec2 { 0, 0 }); }
+
 void StateGame::doCreate()
 {
     float w = static_cast<float>(GP::GetWindowSize().x());
@@ -63,12 +65,18 @@ void StateGame::doInternalUpdate(float const elapsed)
     m_background->update(elapsed);
     m_floor->update(elapsed);
     m_sky->update(elapsed);
+
+    int32 velocityIterations = 6;
+    int32 positionIterations = 2;
+    m_world->Step(elapsed, velocityIterations, positionIterations);
+
     calculateWallScales();
     for (auto const w : m_walls) {
         w->update(elapsed);
     }
     m_overlay->update(elapsed);
-    m_mapPlayer->setPosition(m_player->position * static_cast<float>(GP::MapTileSizeInPixel()));
+    m_mapPlayer->setPosition(
+        m_player->getPosition() * static_cast<float>(GP::MapTileSizeInPixel()));
     m_mapPlayer->update(elapsed);
     m_mapBackground->update(elapsed);
 }
@@ -101,12 +109,18 @@ void StateGame::doCreateInternal()
     // reverse for wall segments being rendered from right to left (mathematical positive angle)
     std::reverse(m_walls.begin(), m_walls.end());
 
-    m_player = std::make_shared<Player>();
-    add(m_player);
-
     m_level = std::make_shared<Level>();
     m_level->loadLevel("assets/level1.png");
-    m_player->position = m_level->getPlayerStartPositionInTiles();
+
+    b2BodyDef playerBodyDef;
+    playerBodyDef.type = b2_dynamicBody;
+    playerBodyDef.fixedRotation = true;
+    playerBodyDef.linearDamping = 2.0f;
+    playerBodyDef.position.Set(
+        m_level->getPlayerStartPositionInTiles().x(), m_level->getPlayerStartPositionInTiles().y());
+
+    m_player = std::make_shared<Player>(m_world, &playerBodyDef);
+    add(m_player);
     m_player->angle = m_level->getPlayerStartAngle();
 
     m_mapBackground = std::make_shared<jt::SmartShape>();
@@ -267,8 +281,8 @@ void scaleWall(std::shared_ptr<jt::SmartShape> w, jt::vector2 playerPos, float t
 void StateGame::calculateWallScales()
 {
     // player absolut position
-    float const px = m_player->position.x();
-    float const py = m_player->position.y();
+    float const px = m_player->getPosition().x();
+    float const py = m_player->getPosition().y();
 
     // player position in full tiles
     int x = static_cast<int>(px);
@@ -296,8 +310,9 @@ void StateGame::calculateWallScales()
             for (int i = 0; i != 50; ++i) {
                 int const ttcx = gethttcx(theta, hn.x());
                 int const ttcy = gethttcy(theta, hn.y());
-                if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
-                    || ttcy >= m_level->getLevelSizeInTiles().y()) {
+                if (ttcx < 0 || ttcy < 0
+                    || ttcx >= static_cast<int>(m_level->getLevelSizeInTiles().x())
+                    || ttcy >= static_cast<int>(m_level->getLevelSizeInTiles().y())) {
                     break;
                 }
                 if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
@@ -315,8 +330,9 @@ void StateGame::calculateWallScales()
             for (int i = 0; i != 50; ++i) {
                 int const ttcx = getvttcx(theta, vn.x());
                 int const ttcy = getvttcy(theta, vn.y());
-                if (ttcx < 0 || ttcy < 0 || ttcx >= m_level->getLevelSizeInTiles().x()
-                    || ttcy >= m_level->getLevelSizeInTiles().y()) {
+                if (ttcx < 0 || ttcy < 0
+                    || ttcx >= static_cast<int>(m_level->getLevelSizeInTiles().x())
+                    || ttcy >= static_cast<int>(m_level->getLevelSizeInTiles().y())) {
                     break;
                 }
                 if (m_level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
@@ -329,7 +345,7 @@ void StateGame::calculateWallScales()
         }
 
         scaleWall(
-            w, m_player->position, theta, m_player->angle, hIntersectionPos, vIntersectionPos);
+            w, m_player->getPosition(), theta, m_player->angle, hIntersectionPos, vIntersectionPos);
     }
 }
 

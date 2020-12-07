@@ -18,7 +18,7 @@ class Hud;
 
 class StateGame : public jt::GameState {
 public:
-    StateGame() = default;
+    StateGame();
 
 protected:
     std::shared_ptr<Hud> m_hud;
@@ -35,6 +35,8 @@ private:
 
     mutable std::shared_ptr<jt::SmartShape> m_sky;
     mutable std::shared_ptr<jt::SmartShape> m_floor;
+
+    std::shared_ptr<b2World> m_world { nullptr };
 
     std::shared_ptr<Level> m_level;
 
