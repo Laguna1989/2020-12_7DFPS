@@ -9,18 +9,22 @@ namespace {
 sf::Image createButtonImage(std::vector<std::string> const& ssv)
 {
     if (ssv.size() != 3) {
+        std::cout << "create button image: vector does not contain 3 elements.\n";
         throw std::invalid_argument { "create button image: vector does not contain 3 elements." };
     }
     std::size_t count { 0 };
     long w = std::stol(ssv.at(1), &count);
     if (count != ssv.at(1).size()) {
+        std::cout << "invalid button size string\n";
         throw std::invalid_argument { "invalid button size string" };
     }
     long h = std::stol(ssv.at(2), &count);
     if (count != ssv.at(2).size()) {
+        std::cout << "invalid button size string\n";
         throw std::invalid_argument { "invalid button size string" };
     }
     if (w <= 0 || h <= 0) {
+        std::cout << "invalid button size string\n";
         throw std::invalid_argument { "invalid button size" };
     }
 
@@ -31,6 +35,7 @@ sf::Image createButtonImage(std::vector<std::string> const& ssv)
 sf::Image createGlowImage(std::vector<std::string> const& ssv)
 {
     if (ssv.size() != 3) {
+        std::cout << "create glow image: vector does not contain 2 elements.\n";
         throw std::invalid_argument { "create glow image: vector does not contain 2 elements." };
     }
     std::size_t count { 0 };

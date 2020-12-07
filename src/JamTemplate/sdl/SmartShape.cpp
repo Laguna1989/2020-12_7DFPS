@@ -6,12 +6,14 @@
 #include "rendertarget.hpp"
 #include "vector.hpp"
 #include <SDL.h>
+#include <iostream>
 #include <memory>
 #include <string>
 
 namespace jt {
 void SmartShape::makeRect(jt::vector2 size)
 {
+    // std::cout << "SmartShape::makeRect: " << size.x() << " " << size.y() << std::endl;
     m_text = TextureManager::get("#x#" + std::to_string(static_cast<int>(size.x())) + "#"
         + std::to_string(static_cast<int>(size.y())));
     m_sourceRect = jt::recti { 0U, 0U, static_cast<int>(size.x()), static_cast<int>(size.y()) };

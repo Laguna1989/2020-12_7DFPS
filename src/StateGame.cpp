@@ -16,6 +16,7 @@ StateGame::StateGame() { m_world = std::make_shared<b2World>(b2Vec2 { 0, 0 }); }
 
 void StateGame::doCreate()
 {
+    // std::cout << "StateGame::do Create\n";
     float w = static_cast<float>(GP::GetWindowSize().x());
     float h = static_cast<float>(GP::GetWindowSize().y());
 
@@ -44,6 +45,7 @@ void StateGame::doCreate()
 
 void StateGame::doCreateInternal()
 {
+    // std::cout << "StateGame::do CreateInternal 1\n";
     m_walls.resize(GP::GetDivisions());
     for (auto i = 0U; i != GP::GetDivisions(); ++i) {
         auto w = std::make_shared<jt::SmartShape>();
@@ -56,9 +58,11 @@ void StateGame::doCreateInternal()
     // reverse for wall segments being rendered from right to left (mathematical positive angle)
     std::reverse(m_walls.begin(), m_walls.end());
 
+    // std::cout << "StateGame::do CreateInternal 2\n";
     m_level = std::make_shared<Level>();
     m_level->loadLevel("assets/level1.png", m_world);
 
+    // std::cout << "StateGame::do CreateInternal 2.5\n";
     b2BodyDef playerBodyDef;
     playerBodyDef.type = b2_dynamicBody;
     playerBodyDef.fixedRotation = true;
@@ -70,20 +74,25 @@ void StateGame::doCreateInternal()
     add(m_player);
     m_player->angle = m_level->getPlayerStartAngle();
 
+    // std::cout << "StateGame::do CreateInternal 3\n";
     m_mapBackground = std::make_shared<jt::SmartShape>();
+
     m_mapBackground->makeRect(
         { static_cast<float>(m_level->getLevelSizeInTiles().x() * GP::MapTileSizeInPixel()),
             static_cast<float>(m_level->getLevelSizeInTiles().y() * GP::MapTileSizeInPixel()) });
     m_mapBackground->setColor(jt::colors::Cyan);
+    // std::cout << "StateGame::do CreateInternal 3.5\n";
     m_mapWall = std::make_shared<jt::SmartShape>();
     m_mapWall->makeRect({ static_cast<float>(GP::MapTileSizeInPixel()),
         static_cast<float>(GP::MapTileSizeInPixel()) });
     m_mapWall->setColor(jt::colors::Green);
+    // std::cout << "StateGame::do CreateInternal 3.75\n";
     m_mapPlayer = std::make_shared<jt::SmartShape>();
     m_mapPlayer->makeRect({ static_cast<float>(GP::MapTileSizeInPixel()),
         static_cast<float>(GP::MapTileSizeInPixel()) });
     m_mapPlayer->setColor(jt::colors::Red);
 
+    // std::cout << "StateGame::do CreateInternal 4\n";
     m_sky = std::make_shared<jt::SmartShape>();
     m_sky->makeRect(jt::vector2 {
         GP::GetWindowSize().x() / GP::GetZoom(), GP::GetWindowSize().y() / 2.0f / GP::GetZoom() });
@@ -96,6 +105,7 @@ void StateGame::doCreateInternal()
     m_floor->setColor(GP::PalletteFloor());
     m_floor->setPosition({ 0, GP::GetWindowSize().y() * (0.5f / GP::GetZoom()) });
 
+    // std::cout << "StateGame::do CreateInternal 5\n";
     playerBodyDef.position = b2Vec2 { 5.0f, 12.0f };
     auto e = std::make_shared<Enemy>(m_world, &playerBodyDef);
 
@@ -106,6 +116,7 @@ void StateGame::doCreateInternal()
 
 void StateGame::doInternalUpdate(float const elapsed)
 {
+    // std::cout << "StateGame::do InternalUpdate\n";
     m_background->update(elapsed);
     m_floor->update(elapsed);
     m_sky->update(elapsed);
@@ -134,6 +145,7 @@ void StateGame::doInternalUpdate(float const elapsed)
 
 void StateGame::doInternalDraw() const
 {
+    // std::cout << "StateGame::do Internal Draw\n";
     m_background->draw(getGame()->getRenderTarget());
     m_sky->draw(getGame()->getRenderTarget());
     m_floor->draw(getGame()->getRenderTarget());
@@ -160,11 +172,13 @@ void StateGame::doInternalDraw() const
 
 void StateGame::calculateWallScales()
 {
+    // std::cout << "StateGame::calculateWallScales\n";
     ::calculateWallScales(m_player->getPosition(), m_player->angle, m_level, m_walls);
 }
 
 void StateGame::drawMap() const
 {
+    // std::cout << "StateGame::drawMap\n";
     m_mapBackground->draw(getGame()->getRenderTarget());
 
     m_mapPlayer->draw(getGame()->getRenderTarget());

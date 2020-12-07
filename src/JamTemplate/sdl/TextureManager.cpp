@@ -2,6 +2,7 @@
 #include "SDLHelper.hpp"
 #include "SpriteFunctions.hpp"
 #include <SDL_image.h>
+#include <iostream>
 #include <map>
 
 namespace jt {
@@ -72,6 +73,7 @@ std::shared_ptr<SDL_Texture> createVignetteImage(
 std::shared_ptr<SDL_Texture> createRectImage(
     std::vector<std::string> const& ssv, std::shared_ptr<jt::renderTarget> rt)
 {
+    // std::cout << "texturemanager::get() createRectImage\n";
     if (ssv.size() != 3) {
         throw std::invalid_argument { "create rect image: vector does not contain 2 elements." };
     }
@@ -85,6 +87,7 @@ std::shared_ptr<SDL_Texture> createRectImage(
         std::cout << "invalid rect h\n";
         throw std::invalid_argument { "invalid rect h" };
     }
+
     return SpriteFunctions::makeRect(rt, w, h);
 }
 
@@ -182,6 +185,7 @@ std::shared_ptr<SDL_Texture> TextureManager::get(std::string const& str)
             } else if (ssv.at(0) == "v") {
                 m_textures[str] = createVignetteImage(ssv, m_renderer.lock());
             } else if (ssv.at(0) == "x") {
+                // std::cout << "texturemanager::get() createrect\n";
                 return createRectImage(ssv, m_renderer.lock());
             } else {
                 throw std::invalid_argument("ERROR: cannot get texture with name " + str);
