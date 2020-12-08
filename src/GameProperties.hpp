@@ -38,13 +38,13 @@ public:
 
     static std::string GameName() { return "7DFPS"; }
     static jt::vector2 GetWindowSize() { return jt::vector2 { 800, 600 }; }
-    static float GetZoom() { return 2.0f; }
+    static float GetZoom() { return 1.0f; }
     static std::size_t GetDivisions()
     {
         return static_cast<std::size_t>(ceil(GetWindowSize().x() / GetZoom())) / 10;
     }
-    static float GetFoVAngle() { return 60.0f; }
-    static float SpriteScale() { return 8.0f; }
+    static float GetFoVAngle() { return 45.0f; }
+    static float SpriteScale() { return 16.0f; }
 
     static float PlayerTurningSpeed() { return 45.0f; }
     static float PlayerAccelerationFactor() { return 115.0f; }

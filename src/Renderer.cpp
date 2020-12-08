@@ -81,6 +81,13 @@ int getvttcx(float const theta, float vnx)
 }
 int getvttcy(float const theta, float vny) { return static_cast<int>(vny); }
 
+float getDistanceTransform(float const theta, jt::vector2 const cp)
+{
+    // float z = cp.x() * mycos(theta) - cp.y() * mysin(theta);
+    float z = jt::MathHelper::length(cp);
+    return 0.85f / z;
+}
+
 void scaleSprite(std::shared_ptr<jt::SmartDrawable> w, jt::vector2 playerPos, float theta,
     float angle, jt::vector2 hIntersectionPos, jt::vector2 vIntersectionPos)
 {
@@ -96,50 +103,36 @@ void scaleSprite(std::shared_ptr<jt::SmartDrawable> w, jt::vector2 playerPos, fl
         dreal = jt::MathHelper::length(dh);
     }
 
-    if (theta >= 0 && theta < 90) {
-        if (lhs > lvs) {
-            d = 0.85f / (abs(dv.x()) * mycos(angle) + abs(dv.y()) * mysin(angle));
+    if (lhs > lvs) {
+        d = getDistanceTransform(theta, dv);
+        if (theta >= 0 && theta < 90) {
             w->setColor(GP::PaletteWallE());
-
-        } else {
-
-            d = 0.85f / (abs(dh.x()) * mycos(angle) + abs(dh.y()) * mysin(angle));
-            w->setColor(GP::PaletteWallN());
-        }
-    } else if (theta >= 90 && theta < 180) {
-        if (lhs > lvs) {
-            d = 0.85f / (abs(dv.x() * mycos(angle)) + abs(dv.y() * mysin(angle)));
+        } else if (theta >= 90 && theta < 180) {
             w->setColor(GP::PaletteWallW());
-
-        } else {
-            d = 0.85f / (abs(dh.x() * mycos(angle)) + abs(dh.y() * mysin(angle)));
-            w->setColor(GP::PaletteWallN());
-        }
-    } else if (theta > 180 && theta < 270) {
-        if (lhs > lvs) {
-            d = 0.85f / (abs(dv.x() * mycos(angle)) + abs(dv.y() * mysin(angle)));
+        } else if (theta > 180 && theta < 270) {
             w->setColor(GP::PaletteWallW());
-
         } else {
-            d = 0.85f / (abs(dh.x() * mycos(angle)) + abs(dh.y() * mysin(angle)));
-            w->setColor(GP::PaletteWallS());
+            w->setColor(GP::PaletteWallE());
         }
     } else {
-        if (lhs > lvs) {
-            d = 0.85f / (abs(dv.x() * mycos(angle)) + abs(dv.y() * mysin(angle)));
-            w->setColor(GP::PaletteWallE());
-
+        d = getDistanceTransform(theta, dh);
+        if (theta >= 0 && theta < 90) {
+            w->setColor(GP::PaletteWallN());
+        } else if (theta >= 90 && theta < 180) {
+            w->setColor(GP::PaletteWallN());
+        } else if (theta > 180 && theta < 270) {
+            w->setColor(GP::PaletteWallS());
         } else {
-            d = 0.85f / (abs(dh.x() * mycos(angle)) + abs(dh.y() * mysin(angle)));
             w->setColor(GP::PaletteWallS());
         }
     }
+
     auto p = w->getPosition();
     p.y() = (1.0f - d) * 0.5f * (GP::GetWindowSize().y() / GP::GetZoom());
     w->setPosition(p);
     w->setScale({ 1.0f, d });
     w->setZDist(dreal);
-}
+} // namespace
 
 } // namespace
 

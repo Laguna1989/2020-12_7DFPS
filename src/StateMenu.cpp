@@ -61,7 +61,9 @@ void StateMenu::doCreate()
     m_overlay->update(0);
 
     m_vignette = std::make_shared<jt::SmartSprite>();
-    m_vignette->loadSprite("#v#400#300");
+    m_vignette->loadSprite("#v#"
+        + std::to_string(static_cast<int>(GP::GetWindowSize().x() / GP::GetZoom())) + "#"
+        + std::to_string(static_cast<int>(GP::GetWindowSize().y() / GP::GetZoom())));
     m_vignette->setColor(jt::color { 255, 255, 255, 100 });
     m_vignette->update(0.0f);
 

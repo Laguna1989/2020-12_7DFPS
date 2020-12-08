@@ -21,7 +21,8 @@ int main()
 
     jt::Random::useTimeAsRandomSeed();
 
-    game = std::make_shared<jt::Game>(800, 600, 2.0f, GP::GameName());
+    game = std::make_shared<jt::Game>(static_cast<unsigned int>(GP::GetWindowSize().x()),
+        static_cast<float>(GP::GetWindowSize().y()), GP::GetZoom(), GP::GameName());
 
     game->runGame(std::make_shared<StateMenu>(), gameloop);
 
