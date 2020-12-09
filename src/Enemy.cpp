@@ -1,4 +1,5 @@
 ﻿#include "Enemy.hpp"
+#include "Game.hpp"
 
 Enemy::Enemy(std::shared_ptr<b2World> world, const b2BodyDef* def)
     : Box2DObject { world, def }
@@ -24,4 +25,4 @@ void Enemy::doCreate()
 }
 
 void Enemy::doUpdate(float const elapsed) { m_anim->update(elapsed); }
-void Enemy::doDraw() const { }
+void Enemy::doDraw() const { m_anim->draw(getGame()->getRenderTarget()); }

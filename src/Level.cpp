@@ -2,7 +2,7 @@
 #include "GameProperties.hpp"
 #include "Player.hpp"
 
-Wall::Wall(std::shared_ptr<b2World> world, b2BodyDef const* def)
+LevelWall ::LevelWall(std::shared_ptr<b2World> world, b2BodyDef const* def)
     : Box2DObject { world, def }
 {
     b2PolygonShape box;
@@ -33,11 +33,18 @@ void Level::loadLevel(std::string const& fileName, std::shared_ptr<b2World> worl
             if (c == jt::colors::White) {
                 m_levelVec.at(posToIndex(i, j)) = Level::TileType::WALL;
                 wallBodyDef.position = b2Vec2 { static_cast<float>(i), static_cast<float>(j) };
-                Wall const w { world, &wallBodyDef };
+                LevelWall const w { world, &wallBodyDef };
             } else {
                 if (c.r() == 0 && c.g() == 255) {
+                    // player start
                     m_playerStart = jt::vector2u { i, j };
                     m_playerStartAngle = 90.0f * c.b();
+                } else if (c.r() == 255 && c.g() == 0 && c.b() == 0) {
+                    // enemy position
+                    m_enemyPositions.push_back(
+                        jt::vector2 { static_cast<float>(i), static_cast<float>(j) });
+                } else if (c.r() == 0 && c.g() == 0 && c.b() == 255) {
+                    m_symbolPosition = jt::vector2 { static_cast<float>(i), static_cast<float>(j) };
                 }
                 m_levelVec.at(posToIndex(i, j)) = Level::TileType::EMPTY;
             }
@@ -62,3 +69,7 @@ std::size_t Level::posToIndex(unsigned int x, unsigned int y) const
 {
     return x + y * m_levelSize.x();
 }
+
+std::vector<jt::vector2> Level::getEnemyPositions() const { return m_enemyPositions; };
+
+jt::vector2 Level::getSymbolPosition() const { return m_symbolPosition; }

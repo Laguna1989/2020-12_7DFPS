@@ -1,4 +1,5 @@
 ﻿#include "StateGame.hpp"
+#include "FastMath.hpp"
 #include "Game.hpp"
 #include "GameProperties.hpp"
 #include "Hud.hpp"
@@ -12,7 +13,24 @@
 #include <algorithm>
 #include <map>
 
-StateGame::StateGame() { m_world = std::make_shared<b2World>(b2Vec2 { 0, 0 }); }
+namespace {
+
+static std::string getLevelFileNameFromId(int id)
+{
+    return "assets/level" + std::to_string(id) + ".png";
+}
+static std::string getTextFileNameFromId(int id)
+{
+    return "assets/level" + std::to_string(id) + ".txt";
+}
+} // namespace
+
+StateGame::StateGame(int levelId)
+{
+    m_levelID = levelId;
+    m_levelFileName = getLevelFileNameFromId(m_levelID);
+    m_world = std::make_shared<b2World>(b2Vec2 { 0, 0 });
+}
 
 void StateGame::doCreate()
 {
@@ -30,17 +48,33 @@ void StateGame::doCreate()
 
     doCreateInternal();
 
+    m_hud = std::make_shared<Hud>();
+    add(m_hud);
+
+    m_introText = std::make_shared<IntroText>(getTextFileNameFromId(m_levelID));
+    add(m_introText);
+    m_introText->setTextColor(jt::color { 176U, 137U, 161U, 255U });
+
     m_overlay = std::make_shared<SmartShape>();
     m_overlay->makeRect(jt::vector2 { w, h });
     m_overlay->setColor(jt::color { 0, 0, 0 });
     m_overlay->update(0);
-    auto tw
-        = TweenAlpha<SmartShape>::create(m_overlay, 0.5f, std::uint8_t { 255 }, std::uint8_t { 0 });
-    tw->setSkipFrames();
-    add(tw);
+    auto tw1 = TweenAlpha<SmartShape>::create(
+        m_overlay, m_introText->getTotalTime(), std::uint8_t { 255 }, std::uint8_t { 100 });
+    tw1->setSkipFrames();
 
-    m_hud = std::make_shared<Hud>();
-    add(m_hud);
+    add(tw1);
+    auto tw2
+        = TweenAlpha<SmartShape>::create(m_overlay, 0.5f, std::uint8_t { 100 }, std::uint8_t { 0 });
+    tw2->setSkipFrames();
+    tw2->setStartDelay(m_introText->getTotalTime());
+    tw2->addCompleteCallback([this]() {
+        m_starting = false;
+        m_player->setTakeInput(true);
+    });
+    add(tw2);
+
+    m_world->SetContactListener(&m_contactListener);
 }
 
 void StateGame::doCreateInternal()
@@ -48,19 +82,20 @@ void StateGame::doCreateInternal()
     // std::cout << "StateGame::do CreateInternal 1\n";
     m_walls.resize(GP::GetDivisions());
     for (auto i = 0U; i != GP::GetDivisions(); ++i) {
-        auto w = std::make_shared<jt::SmartShape>();
+        auto w = std::make_shared<Wall>();
         float const binWidth = GP::GetWindowSize().x() / GP::GetZoom() / GP::GetDivisions();
-        w->makeRect({ binWidth, GP::GetWindowSize().y() / GP::GetZoom() });
-        w->setColor(jt::Random::getRandomColor());
-        w->setPosition({ static_cast<float>(i * binWidth), 0.0f });
+        w->getShape()->makeRect({ binWidth, GP::GetWindowSize().y() / GP::GetZoom() });
+        w->getShape()->setColor(jt::Random::getRandomColor());
+        w->getShape()->setPosition({ static_cast<float>(i * binWidth), 0.0f });
         m_walls.at(i) = w;
+        add(w);
     }
     // reverse for wall segments being rendered from right to left (mathematical positive angle)
     std::reverse(m_walls.begin(), m_walls.end());
 
     // std::cout << "StateGame::do CreateInternal 2\n";
     m_level = std::make_shared<Level>();
-    m_level->loadLevel("assets/level1.png", m_world);
+    m_level->loadLevel(m_levelFileName, m_world);
 
     // std::cout << "StateGame::do CreateInternal 2.5\n";
     b2BodyDef playerBodyDef;
@@ -71,8 +106,9 @@ void StateGame::doCreateInternal()
         m_level->getPlayerStartPositionInTiles().x(), m_level->getPlayerStartPositionInTiles().y());
 
     m_player = std::make_shared<Player>(m_world, &playerBodyDef);
-    add(m_player);
     m_player->angle = m_level->getPlayerStartAngle();
+    m_player->setTakeInput(false);
+    add(m_player);
 
     // std::cout << "StateGame::do CreateInternal 3\n";
     m_mapBackground = std::make_shared<jt::SmartShape>();
@@ -105,42 +141,93 @@ void StateGame::doCreateInternal()
     m_floor->setColor(GP::PalletteFloor());
     m_floor->setPosition({ 0, GP::GetWindowSize().y() * (0.5f / GP::GetZoom()) });
 
-    // std::cout << "StateGame::do CreateInternal 5\n";
-    playerBodyDef.position = b2Vec2 { 5.0f, 12.0f };
-    auto e = std::make_shared<Enemy>(m_world, &playerBodyDef);
+    for (auto const& enemyPosition : m_level->getEnemyPositions()) {
+        playerBodyDef.position = jt::Conversion::vec(enemyPosition);
+        auto e = std::make_shared<Enemy>(m_world, &playerBodyDef);
+        add(e);
+        /*   e->getAnimation()->setPosition({ 100, 150 });*/
+        m_enemies.push_back(e);
+    }
 
-    add(e);
-    /*   e->getAnimation()->setPosition({ 100, 150 });*/
-    m_enemies.push_back(e);
+    // std::cout << "StateGame::do CreateInternal 5\n";
+
+    m_hud = std::make_shared<Hud>();
+
+    b2BodyDef symbolBodyDef;
+    symbolBodyDef.type = b2_staticBody;
+    symbolBodyDef.fixedRotation = true;
+    symbolBodyDef.position = jt::Conversion::vec(m_level->getSymbolPosition());
+    m_symbol = std::make_shared<Symbol>(m_world, &symbolBodyDef);
+    add(m_symbol);
+
+    m_shots = std::make_shared<jt::ObjectGroup<Shot>>();
+    add(m_shots);
 }
 
 void StateGame::doInternalUpdate(float const elapsed)
 {
-    // std::cout << "StateGame::do InternalUpdate\n";
-    m_background->update(elapsed);
-    m_floor->update(elapsed);
-    m_sky->update(elapsed);
-
-    int32 velocityIterations = 6;
-    int32 positionIterations = 2;
-    m_world->Step(elapsed, velocityIterations, positionIterations);
-
-    calculateWallScales();
-    for (auto const w : m_walls) {
-        w->update(elapsed);
+    if (jt::InputManager::justPressed(jt::KeyCode::Escape)) {
+        m_starting = false;
+        m_introText->update(5000);
+        m_player->setTakeInput(true);
     }
 
-    for (auto const e : m_enemies) {
-        ::calculateSpriteScale(
-            m_player->getPosition(), m_player->angle, e->getPosition(), e->getAnimation());
-        e->update(elapsed);
-    }
+    if (!m_starting && !m_ending) {
+        if (!m_introText->isDone()) {
+            m_starting = false;
+        }
+        // std::cout << "StateGame::do InternalUpdate\n";
+        m_background->update(elapsed);
+        m_floor->update(elapsed);
+        m_sky->update(elapsed);
 
-    m_overlay->update(elapsed);
-    m_mapPlayer->setPosition(
-        m_player->getPosition() * static_cast<float>(GP::MapTileSizeInPixel()));
-    m_mapPlayer->update(elapsed);
-    m_mapBackground->update(elapsed);
+        int32 velocityIterations = 6;
+        int32 positionIterations = 2;
+        m_world->Step(elapsed, velocityIterations, positionIterations);
+
+        calculateWallScales();
+        for (auto const& w : m_walls) {
+            w->update(elapsed);
+        }
+
+        for (auto const& e : m_enemies) {
+            ::calculateSpriteScale(
+                m_player->getPosition(), m_player->angle, e->getPosition(), e->getAnimation());
+            e->update(elapsed);
+        }
+
+        ::calculateSpriteScale(m_player->getPosition(), m_player->angle, m_symbol->getPosition(),
+            m_symbol->getSprite());
+        m_symbol->update(elapsed);
+
+        for (auto& s : *m_shots) {
+            if (s.expired()) {
+                continue;
+            }
+            auto const sp = s.lock();
+            ::calculateSpriteScale(
+                m_player->getPosition(), m_player->angle, sp->getPosition(), sp->getAnim(), 30.0f);
+        }
+
+        m_overlay->update(elapsed);
+        m_mapPlayer->setPosition(
+            m_player->getPosition() * static_cast<float>(GP::MapTileSizeInPixel()));
+        m_mapPlayer->update(elapsed);
+        m_mapBackground->update(elapsed);
+
+        jt::vector2 const vectorPlayerSymbol = m_symbol->getPosition() - m_player->getPosition();
+        float distancePlayerSymbolSquared = jt::MathHelper::lengthSquared(vectorPlayerSymbol);
+
+        if (distancePlayerSymbolSquared
+            < GP::SymbolTriggerDistance() * GP::SymbolTriggerDistance()) {
+            m_ending = true;
+            getGame()->switchState(std::make_shared<StateGame>(m_levelID + 1));
+        }
+
+        if (m_player->getShootNow()) {
+            SpawnShot();
+        }
+    }
 }
 
 void StateGame::doInternalDraw() const
@@ -149,25 +236,34 @@ void StateGame::doInternalDraw() const
     m_background->draw(getGame()->getRenderTarget());
     m_sky->draw(getGame()->getRenderTarget());
     m_floor->draw(getGame()->getRenderTarget());
-    drawObjects();
+    // drawObjects();
 
-    std::map<float, std::vector<std::shared_ptr<jt::SmartDrawable>>> zMap;
+    std::map<float, std::vector<std::shared_ptr<jt::GameObject>>> zMap;
 
-    for (auto const w : m_walls) {
-        zMap[-w->getZDist()].push_back(w);
+    for (auto const& w : m_walls) {
+        zMap[-w->getShape()->getZDist()].push_back(w);
     }
-    for (auto const e : m_enemies) {
-        zMap[-e->getAnimation()->getZDist()].push_back(e->getAnimation());
+    for (auto const& e : m_enemies) {
+        zMap[-e->getAnimation()->getZDist()].push_back(e);
+    }
+    zMap[-m_symbol->getSprite()->getZDist()].push_back(m_symbol);
+    for (auto& s : *m_shots) {
+        if (s.expired()) {
+            continue;
+        }
+        auto sp = s.lock();
+        zMap[-sp->getAnim()->getZDist()].push_back(sp);
     }
 
     for (auto const& kvp : zMap) {
         for (auto p : kvp.second) {
-            p->draw(getGame()->getRenderTarget());
+            p->draw();
         }
     }
 
     drawMap();
     m_overlay->draw(getGame()->getRenderTarget());
+    m_introText->draw();
 }
 
 void StateGame::calculateWallScales()
@@ -185,7 +281,8 @@ void StateGame::drawMap() const
 
     for (size_t i = 0U; i != m_level->getLevelSizeInTiles().x(); ++i) {
         for (size_t j = 0U; j != m_level->getLevelSizeInTiles().y(); ++j) {
-            if (m_level->getTileTypeAt(i, j) == Level::TileType::WALL) {
+            if (m_level->getTileTypeAt(static_cast<unsigned int>(i), static_cast<unsigned int>(j))
+                == Level::TileType::WALL) {
                 m_mapWall->setPosition(
                     { 1.0f * i * GP::MapTileSizeInPixel(), 1.0f * j * GP::MapTileSizeInPixel() });
                 m_mapWall->update(0.0f);
@@ -193,4 +290,22 @@ void StateGame::drawMap() const
             }
         }
     }
+}
+
+void StateGame::SpawnShot()
+{
+    b2BodyDef shotBodyDef;
+    shotBodyDef.type = b2_dynamicBody;
+    shotBodyDef.fixedRotation = true;
+    shotBodyDef.linearDamping = 0.0f;
+    float const a = m_player->angle;
+    jt::vector2 const dir { mycos(a), -mysin(a) };
+    // std::cout << dir.x() << " " << dir.y() << std::endl;
+    shotBodyDef.position.Set(
+        m_player->getPosition().x() + dir.x() + 0.0f, m_player->getPosition().y() + dir.y() + 0.0f);
+    auto s = std::make_shared<Shot>(m_world, &shotBodyDef);
+    s->setVelocity(dir * GP::ShotSpeed());
+    add(s);
+    s->update(1.0f / 60.0f);
+    m_shots->push_back(s);
 }

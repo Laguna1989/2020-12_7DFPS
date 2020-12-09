@@ -9,14 +9,11 @@ class Hud : public jt::GameObject {
 public:
     Hud();
 
-    void AddScoreP1(int i = 1);
-    void AddScoreP2(int i = 1);
-
 private:
-    int m_scoreP1 { -1 };
+    float m_health { 100 };
     int m_scoreP2 { -1 };
 
-    jt::SmartText::Sptr m_scoreP1Text;
+    jt::SmartText::Sptr m_scoreHealth;
     jt::SmartText::Sptr m_scoreP2Text;
 
     void doUpdate(float const elapsed) override;

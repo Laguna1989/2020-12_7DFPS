@@ -23,6 +23,8 @@ public:
     // doSwitchState() which will happen at the beginning of the next update loop.
     void switchState(std::shared_ptr<GameState> newState);
 
+    std::shared_ptr<GameState> getCurrentSate();
+
     // cannot be const because getView is not const
     jt::vector2 getCamOffset();
     void setCamOffset(jt::vector2 const& ofs);

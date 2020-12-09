@@ -126,7 +126,7 @@ void StateMenu::doInternalUpdate(float const elapsed)
                 m_overlay, 0.5f, std::uint8_t { 0 }, std::uint8_t { 255 });
             tw->setSkipFrames();
             tw->addCompleteCallback(
-                [this]() { getGame()->switchState(std::make_shared<StateGame>()); });
+                [this]() { getGame()->switchState(std::make_shared<StateGame>(1)); });
             add(tw);
         }
 

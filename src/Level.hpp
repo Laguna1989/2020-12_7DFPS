@@ -11,9 +11,9 @@
 // fwd decl
 class Player;
 
-class Wall : public jt::Box2DObject {
+class LevelWall : public jt::Box2DObject {
 public:
-    Wall(std::shared_ptr<b2World> world, b2BodyDef const* def);
+    LevelWall(std::shared_ptr<b2World> world, b2BodyDef const* def);
 };
 
 class Level {
@@ -28,6 +28,8 @@ public:
 
     jt::vector2 getPlayerStartPositionInTiles() const;
     float getPlayerStartAngle() const;
+    std::vector<jt::vector2> getEnemyPositions() const;
+    jt::vector2 getSymbolPosition() const;
 
 private:
     std::vector<TileType> m_levelVec {};
@@ -36,6 +38,8 @@ private:
     float m_playerStartAngle { 0.0f };
 
     std::size_t posToIndex(unsigned int x, unsigned int y) const;
+    std::vector<jt::vector2> m_enemyPositions;
+    jt::vector2 m_symbolPosition;
 };
 
 #endif

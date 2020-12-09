@@ -1,61 +1,46 @@
 ﻿#include "Hud.hpp"
 #include "GameBase.hpp"
+#include "GameProperties.hpp"
 #include "color.hpp"
 
 Hud::Hud() = default;
 
-void Hud::AddScoreP1(int i)
+void Hud::doCreate()
 {
-    m_scoreP1 += i;
-    if (m_scoreP1 < 0) {
-        m_scoreP1 = 0;
-    }
-}
+    m_scoreHealth = std::make_shared<jt::SmartText>();
+    m_scoreHealth->loadFont("assets/font.ttf", 32, getGame()->getRenderTarget());
+    m_scoreHealth->setColor(jt::color { 248, 249, 254 });
+    m_scoreHealth->update(0.0f);
+    m_scoreHealth->SetTextAlign(jt::SmartText::TextAlign::LEFT);
+    m_scoreHealth->setPosition({ 20, (GP::GetWindowSize().y() / GP::GetZoom() - 40.0f) });
 
-void Hud::AddScoreP2(int i)
-{
-    m_scoreP2 += i;
-    if (m_scoreP2 < 0) {
-        m_scoreP2 = 0;
-    }
+    m_scoreP2Text = std::make_shared<jt::SmartText>();
+    m_scoreP2Text->loadFont("assets/font.ttf", 32, getGame()->getRenderTarget());
+    m_scoreP2Text->setColor(jt::color { 248, 249, 254 });
+    m_scoreP2Text->update(0.0f);
+    m_scoreP2Text->SetTextAlign(jt::SmartText::TextAlign::LEFT);
+    m_scoreP2Text->setPosition({ 650 / 2 + 10, 325 });
 }
 
 void Hud::doUpdate(float const elapsed)
 {
-    if (m_scoreP1 >= 0) {
-        m_scoreP1Text->setText("P1 Score: " + std::to_string(m_scoreP1));
+    if (m_health >= 0) {
+        m_scoreHealth->setText(std::to_string(static_cast<int>(m_health)));
     }
     if (m_scoreP2 >= 0) {
         m_scoreP2Text->setText("P2 Score: " + std::to_string(m_scoreP2));
     }
 
-    m_scoreP1Text->update(elapsed);
+    m_scoreHealth->update(elapsed);
     m_scoreP2Text->update(elapsed);
 }
 
 void Hud::doDraw() const
 {
-    if (m_scoreP1 >= 0) {
-        m_scoreP1Text->draw(getGame()->getRenderTarget());
+    if (m_health >= 0) {
+        m_scoreHealth->draw(getGame()->getRenderTarget());
     }
     if (m_scoreP2 >= 0) {
         m_scoreP2Text->draw(getGame()->getRenderTarget());
     }
-}
-
-void Hud::doCreate()
-{
-    m_scoreP1Text = std::make_shared<jt::SmartText>();
-    m_scoreP1Text->loadFont("assets/font.ttf", 16, getGame()->getRenderTarget());
-    m_scoreP1Text->setColor(jt::color { 248, 249, 254 });
-    m_scoreP1Text->update(0.0f);
-    m_scoreP1Text->SetTextAlign(jt::SmartText::TextAlign::LEFT);
-    m_scoreP1Text->setPosition({ 20, 325 });
-
-    m_scoreP2Text = std::make_shared<jt::SmartText>();
-    m_scoreP2Text->loadFont("assets/font.ttf", 16, getGame()->getRenderTarget());
-    m_scoreP2Text->setColor(jt::color { 248, 249, 254 });
-    m_scoreP2Text->update(0.0f);
-    m_scoreP2Text->SetTextAlign(jt::SmartText::TextAlign::LEFT);
-    m_scoreP2Text->setPosition({ 650 / 2 + 10, 325 });
 }

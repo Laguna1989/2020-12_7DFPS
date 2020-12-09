@@ -105,9 +105,19 @@ void GameState::addNewObjects()
 }
 void GameState::cleanUpObjects()
 {
+    std::size_t a = m_objects.size();
     m_objects.erase(std::remove_if(m_objects.begin(), m_objects.end(),
-                        [](GameObject::Sptr go) { return !(go->isAlive()); }),
+                        [](GameObject::Sptr go) {
+                            bool isDead = !go->isAlive();
+                            if (isDead) {
+                                go->destroy();
+                            }
+                            return isDead;
+                        }),
         m_objects.end());
+
+    std::size_t b = m_objects.size();
+    std::cout << "objectcount : " << a << " " << b << std::endl;
 }
 
 void GameState::doDraw() const { internalDraw(); };

@@ -83,8 +83,7 @@ int getvttcy(float const theta, float vny) { return static_cast<int>(vny); }
 
 float getDistanceTransform(float const theta, jt::vector2 const cp)
 {
-    // float z = cp.x() * mycos(theta) - cp.y() * mysin(theta);
-    float z = jt::MathHelper::length(cp);
+    float z = cp.x() * mycos(theta) - cp.y() * mysin(theta);
     return 0.85f / z;
 }
 
@@ -95,16 +94,12 @@ void scaleSprite(std::shared_ptr<jt::SmartDrawable> w, jt::vector2 playerPos, fl
     auto const dv = vIntersectionPos - playerPos;
     auto const lhs = jt::MathHelper::lengthSquared(dh);
     auto const lvs = jt::MathHelper::lengthSquared(dv);
-    float d;
-    float dreal;
-    if (lhs > lvs) {
-        dreal = jt::MathHelper::length(dv);
-    } else {
-        dreal = jt::MathHelper::length(dh);
-    }
+    float d {};
+    float dreal {};
 
     if (lhs > lvs) {
-        d = getDistanceTransform(theta, dv);
+        d = getDistanceTransform(angle, dv);
+        dreal = jt::MathHelper::length(dv);
         if (theta >= 0 && theta < 90) {
             w->setColor(GP::PaletteWallE());
         } else if (theta >= 90 && theta < 180) {
@@ -115,7 +110,8 @@ void scaleSprite(std::shared_ptr<jt::SmartDrawable> w, jt::vector2 playerPos, fl
             w->setColor(GP::PaletteWallE());
         }
     } else {
-        d = getDistanceTransform(theta, dh);
+        d = getDistanceTransform(angle, dh);
+        dreal = jt::MathHelper::length(dh);
         if (theta >= 0 && theta < 90) {
             w->setColor(GP::PaletteWallN());
         } else if (theta >= 90 && theta < 180) {
@@ -137,7 +133,7 @@ void scaleSprite(std::shared_ptr<jt::SmartDrawable> w, jt::vector2 playerPos, fl
 } // namespace
 
 void calculateWallScales(jt::vector2 const playerPos, float const angle,
-    std::shared_ptr<Level> const level, std::vector<std::shared_ptr<jt::SmartShape>>& walls)
+    std::shared_ptr<Level> const level, std::vector<std::shared_ptr<Wall>>& walls)
 {
     // player absolut position
     float const px = playerPos.x() + 0.45f;
@@ -157,7 +153,6 @@ void calculateWallScales(jt::vector2 const playerPos, float const angle,
     for (auto i = 0U; i != GP::GetDivisions(); ++i) {
         // ray direction
         float const theta = wrapAngle(angleStart + i * angleIncrement);
-        auto w = walls.at(i);
 
         jt::vector2 vIntersectionPos {};
         jt::vector2 hIntersectionPos {};
@@ -202,13 +197,13 @@ void calculateWallScales(jt::vector2 const playerPos, float const angle,
                 vn = vn + vInc;
             }
         }
-
-        scaleSprite(w, playerPos, theta, angle, hIntersectionPos, vIntersectionPos);
+        auto w = walls.at(i);
+        scaleSprite(w->getShape(), playerPos, theta, angle, hIntersectionPos, vIntersectionPos);
     }
 }
 
 void calculateSpriteScale(jt::vector2 const playerPos, float const angle,
-    jt::vector2 const spriteWorldPos, std::shared_ptr<jt::SmartDrawable> d)
+    jt::vector2 const spriteWorldPos, std::shared_ptr<jt::SmartDrawable> d, float yOffset)
 {
     const jt::vector2 dist = spriteWorldPos - playerPos;
 
@@ -228,13 +223,10 @@ void calculateSpriteScale(jt::vector2 const playerPos, float const angle,
 
     auto const s = d->getScale();
     float newScale = s.y() * GP::SpriteScale();
-    // if (newScale >= 2.5f) {
-    //    newScale = 2.5f;
-
-    //}
     d->setScale({ newScale, newScale });
     // std::cout << d->getScale().y() << std::endl;
     auto const p = d->getPosition();
-    d->setPosition(
-        { xp, p.y() - 6.0f - (d->getLocalBounds().height()) * (0.1f - 0.9f * newScale) });
+    auto const py = p.y() + 5.0f - (d->getLocalBounds().height()) * (0.5f - 0.5f * newScale);
+    d->setZDist(d->getZDist() - 1);
+    d->setPosition({ xp, py + yOffset });
 }

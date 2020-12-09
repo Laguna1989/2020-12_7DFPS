@@ -6,11 +6,19 @@
 
 class Player : public jt::Box2DObject {
 public:
+    float angle { 0.0f };
     Player(std::shared_ptr<b2World> world, const b2BodyDef* def);
+    void handleInput(float elapsed);
 
-    float angle;
+    void setTakeInput(bool take);
+    bool getTakeInput();
+
+    bool getShootNow();
 
 private:
+    bool m_takeInput { true };
+    bool m_shootNow { false };
+
     void doUpdate(float const elapsed) override;
     void doDraw() const override {};
     void doCreate() override {};

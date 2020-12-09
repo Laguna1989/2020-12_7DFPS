@@ -24,19 +24,8 @@ Player::Player(std::shared_ptr<b2World> world, const b2BodyDef* def)
 
 void Player::doUpdate(float elapsed)
 {
-    if (jt::InputManager::pressed(jt::KeyCode::D)) {
-        angle -= elapsed * GP::PlayerTurningSpeed();
-    }
-    if (jt::InputManager::pressed(jt::KeyCode::A)) {
-        angle += elapsed * GP::PlayerTurningSpeed();
-    }
-    jt::vector2 const dir
-        = { cos(jt::MathHelper::deg2rad(angle)), -sin(jt::MathHelper::deg2rad(angle)) };
-    if (jt::InputManager::pressed(jt::KeyCode::W)) {
-        getB2Body()->ApplyForceToCenter(vec(dir * GP::PlayerAccelerationFactor()), true);
-    }
-    if (jt::InputManager::pressed(jt::KeyCode::S)) {
-        getB2Body()->ApplyForceToCenter(vec(-1.0f * dir * GP::PlayerAccelerationFactor()), true);
+    if (m_takeInput) {
+        handleInput(elapsed);
     }
 
     auto v = vec(getB2Body()->GetLinearVelocity());
@@ -57,4 +46,36 @@ void Player::doUpdate(float elapsed)
         v = v * (GP::PlayerMaxSpeed() / l);
     }
     getB2Body()->SetLinearVelocity(vec(v));
+}
+
+void Player::handleInput(float elapsed)
+{
+    if (jt::InputManager::pressed(jt::KeyCode::D)) {
+        angle -= elapsed * GP::PlayerTurningSpeed();
+    }
+    if (jt::InputManager::pressed(jt::KeyCode::A)) {
+        angle += elapsed * GP::PlayerTurningSpeed();
+    }
+    jt::vector2 const dir
+        = { cos(jt::MathHelper::deg2rad(angle)), -sin(jt::MathHelper::deg2rad(angle)) };
+    if (jt::InputManager::pressed(jt::KeyCode::W)) {
+        getB2Body()->ApplyForceToCenter(vec(dir * GP::PlayerAccelerationFactor()), true);
+    }
+    if (jt::InputManager::pressed(jt::KeyCode::S)) {
+        getB2Body()->ApplyForceToCenter(vec(-1.0f * dir * GP::PlayerAccelerationFactor()), true);
+    }
+
+    if (jt::InputManager::justPressed(jt::KeyCode::Space)) {
+        m_shootNow = true;
+    }
+}
+
+void Player::setTakeInput(bool take) { m_takeInput = take; }
+bool Player::getTakeInput() { return m_takeInput; }
+
+bool Player::getShootNow()
+{
+    bool const t = m_shootNow;
+    m_shootNow = false;
+    return t;
 }
