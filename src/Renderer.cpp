@@ -4,7 +4,7 @@
 #include "MathHelper.hpp"
 
 namespace {
-jt::vector2 getH1(float const theta, float px, float py, float dx, float dy)
+jt::vector2 getH1(float const theta, float px, float py, float /*dx*/, float dy)
 {
     int const x = static_cast<int>(px);
     int const y = static_cast<int>(py);
@@ -33,10 +33,9 @@ jt::vector2 getHInc(float const theta)
     }
 }
 
-jt::vector2 getV1(float const theta, float px, float py, float dx, float dy)
+jt::vector2 getV1(float const theta, float px, float py, float dx, float /*dy*/)
 {
     int const x = static_cast<int>(px);
-    int const y = static_cast<int>(py);
     if (theta >= 0 && theta < 90) {
         return jt::vector2 { x + 1.0f, py - (1 - dx) * mytan(theta) };
     } else if (theta >= 90 && theta < 180) {
@@ -61,7 +60,7 @@ jt::vector2 getVInc(float const theta)
     }
 }
 
-int gethttcx(float const theta, float hnx) { return static_cast<int>(hnx); }
+int gethttcx(float const /*theta*/, float hnx) { return static_cast<int>(hnx); }
 int gethttcy(float const theta, float hny)
 {
     if (theta >= 0 && theta < 180) {
@@ -79,7 +78,7 @@ int getvttcx(float const theta, float vnx)
         return static_cast<int>(vnx);
     }
 }
-int getvttcy(float const theta, float vny) { return static_cast<int>(vny); }
+int getvttcy(float const /*theta*/, float vny) { return static_cast<int>(vny); }
 
 float getDistanceTransform(float const theta, jt::vector2 const cp)
 {

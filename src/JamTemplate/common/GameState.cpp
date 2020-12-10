@@ -117,7 +117,7 @@ void GameState::cleanUpObjects()
         m_objects.end());
 
     std::size_t b = m_objects.size();
-    std::cout << "objectcount : " << a << " " << b << std::endl;
+    // std::cout << "objectcount : " << a << " " << b << std::endl;
 }
 
 void GameState::doDraw() const { internalDraw(); };
