@@ -57,6 +57,11 @@ public:
     static float SymbolTriggerDistance() { return 1.1f; }
 
     static float ShotSpeed() { return 8.0f; }
+
+    static float EnemyHitPointsDefault() { return 100.0f; }
+
+    static float ExplosionRadius() { return 1.0f; }
+    static float ExplosionDamage() { return 51.0f; }
 };
 
 #endif

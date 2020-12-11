@@ -1,5 +1,6 @@
 ﻿#include "Enemy.hpp"
 #include "Game.hpp"
+#include "GameProperties.hpp"
 
 Enemy::Enemy(std::shared_ptr<b2World> world, const b2BodyDef* def)
     : Box2DObject { world, def }
@@ -13,6 +14,7 @@ Enemy::Enemy(std::shared_ptr<b2World> world, const b2BodyDef* def)
     fixtureDef.friction = 0.9f;
 
     getB2Body()->CreateFixture(&fixtureDef);
+    m_hitpoints = GP::EnemyHitPointsDefault();
 }
 std::shared_ptr<jt::SmartAnimation> Enemy::getAnimation() { return m_anim; }
 
@@ -26,3 +28,11 @@ void Enemy::doCreate()
 
 void Enemy::doUpdate(float const elapsed) { m_anim->update(elapsed); }
 void Enemy::doDraw() const { m_anim->draw(getGame()->getRenderTarget()); }
+
+void Enemy::TakeDamage(float damage)
+{
+    m_hitpoints -= damage;
+    if (m_hitpoints <= 0.0f) {
+        kill();
+    }
+}

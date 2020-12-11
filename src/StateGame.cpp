@@ -138,12 +138,21 @@ void StateGame::doCreateInternal()
     m_floor->setColor(GP::PalletteFloor());
     m_floor->setPosition({ 0, GP::GetWindowSize().y() * (0.5f / GP::GetZoom()) });
 
+    m_enemies = std::make_shared<jt::ObjectGroup<Enemy>>();
+    add(m_enemies);
+
+    m_shots = std::make_shared<jt::ObjectGroup<Shot>>();
+    add(m_shots);
+
+    m_explosions = std::make_shared<jt::ObjectGroup<Explosion>>();
+    add(m_explosions);
+
     for (auto const& enemyPosition : m_level->getEnemyPositions()) {
         playerBodyDef.position = jt::Conversion::vec(enemyPosition);
         auto e = std::make_shared<Enemy>(m_world, &playerBodyDef);
         add(e);
         /*   e->getAnimation()->setPosition({ 100, 150 });*/
-        m_enemies.push_back(e);
+        m_enemies->push_back(e);
     }
 
     // std::cout << "StateGame::do CreateInternal 5\n";
@@ -156,9 +165,6 @@ void StateGame::doCreateInternal()
     symbolBodyDef.position = jt::Conversion::vec(m_level->getSymbolPosition());
     m_symbol = std::make_shared<Symbol>(m_world, &symbolBodyDef);
     add(m_symbol);
-
-    m_shots = std::make_shared<jt::ObjectGroup<Shot>>();
-    add(m_shots);
 }
 
 void StateGame::doInternalUpdate(float const elapsed)
@@ -192,7 +198,11 @@ void StateGame::doInternalUpdate(float const elapsed)
             w->update(elapsed);
         }
 
-        for (auto const& e : m_enemies) {
+        for (auto const& wp : *m_enemies) {
+            if (wp.expired()) {
+                continue;
+            }
+            auto const e = wp.lock();
             ::calculateSpriteScale(
                 m_player->getPosition(), m_player->angle, e->getPosition(), e->getAnimation());
             e->update(elapsed);
@@ -209,6 +219,16 @@ void StateGame::doInternalUpdate(float const elapsed)
             auto const sp = s.lock();
             ::calculateSpriteScale(
                 m_player->getPosition(), m_player->angle, sp->getPosition(), sp->getAnim(), 30.0f);
+        }
+        for (auto& e : *m_explosions) {
+            if (e.expired()) {
+                continue;
+            }
+            auto const sp = e.lock();
+            ::calculateSpriteScale(
+                m_player->getPosition(), m_player->angle, sp->getPosition(), sp->getShape());
+
+            sp->update(elapsed);
         }
 
         m_overlay->update(elapsed);
@@ -245,7 +265,11 @@ void StateGame::doInternalDraw() const
     for (auto const& w : m_walls) {
         zMap[-w->getShape()->getZDist()].push_back(w);
     }
-    for (auto const& e : m_enemies) {
+    for (auto const& wp : *m_enemies) {
+        if (wp.expired()) {
+            continue;
+        }
+        auto const e = wp.lock();
         zMap[-e->getAnimation()->getZDist()].push_back(e);
     }
     zMap[-m_symbol->getAnim()->getZDist()].push_back(m_symbol);
@@ -255,6 +279,14 @@ void StateGame::doInternalDraw() const
         }
         auto sp = s.lock();
         zMap[-sp->getAnim()->getZDist()].push_back(sp);
+    }
+
+    for (auto& s : *m_explosions) {
+        if (s.expired()) {
+            continue;
+        }
+        auto sp = s.lock();
+        zMap[-sp->getShape()->getZDist()].push_back(sp);
     }
 
     for (auto const& kvp : zMap) {
@@ -310,7 +342,33 @@ void StateGame::SpawnShot()
         m_player->getPosition().x() + dir.x() + 0.0f, m_player->getPosition().y() + dir.y() + 0.0f);
     auto s = std::make_shared<Shot>(m_world, &shotBodyDef);
     s->setVelocity(dir * GP::ShotSpeed());
+    s->setState(weak_from_this());
     add(s);
     s->update(1.0f / 60.0f);
     m_shots->push_back(s);
+}
+
+void StateGame::SpawnExplosion(jt::vector2 pos)
+{
+    auto const ex = std::make_shared<Explosion>(pos);
+    add(ex);
+    using ta = jt::TweenAlpha<jt::SmartShape>;
+    auto tw = ta::create(ex->getShape(), 0.75f, 255U, 0U);
+    tw->addCompleteCallback([ex = ex]() { ex->kill(); });
+    add(tw);
+    m_explosions->push_back(ex);
+
+    for (auto& wp : *m_enemies) {
+        if (wp.expired()) {
+            continue;
+        }
+        auto const e = wp.lock();
+        auto const enemyPosition = e->getPosition();
+        auto const explosionPosition = pos;
+        auto const distance = enemyPosition - explosionPosition;
+        auto const l = jt::MathHelper::length(distance);
+        if (l < GP::ExplosionRadius()) {
+            e->TakeDamage(GP::ExplosionDamage());
+        }
+    }
 }

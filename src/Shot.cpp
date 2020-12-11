@@ -1,5 +1,6 @@
 ﻿#include "Shot.hpp"
 #include "Game.hpp"
+#include "StateGame.hpp"
 
 Shot::Shot(std::shared_ptr<b2World> world, b2BodyDef* def)
     : Box2DObject { world, def }
@@ -34,6 +35,14 @@ void Shot::doDraw() const { m_anim->draw(getGame()->getRenderTarget()); }
 
 void Shot::collide()
 {
-    std::cout << "collide\n";
-    kill();
+    if (!m_hasCollided) {
+        m_hasCollided = true;
+        if (!m_state.expired()) {
+            auto const s = m_state.lock();
+            s->SpawnExplosion(getPosition());
+        }
+        kill();
+    }
 }
+
+void Shot::setState(std::weak_ptr<StateGame> state) { m_state = state; }

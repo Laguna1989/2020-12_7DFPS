@@ -9,12 +9,15 @@ class MyContactListener : public b2ContactListener {
     void BeginContact(b2Contact* contact)
     {
         void* bodyUserData = contact->GetFixtureA()->GetBody()->GetUserData();
-        if (bodyUserData)
+        if (bodyUserData) {
             static_cast<Shot*>(bodyUserData)->collide();
+            return;
+        }
 
         bodyUserData = contact->GetFixtureB()->GetBody()->GetUserData();
-        if (bodyUserData)
+        if (bodyUserData) {
             static_cast<Shot*>(bodyUserData)->collide();
+        }
     }
 
     void EndContact(b2Contact* /*contact*/) { }

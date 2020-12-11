@@ -11,11 +11,14 @@ public:
 
     std::shared_ptr<jt::SmartAnimation> getAnimation();
 
+    void TakeDamage(float damage);
+
 private:
     std::shared_ptr<jt::SmartAnimation> m_anim;
     void doUpdate(float const elapsed) override;
     void doDraw() const override;
     void doCreate() override;
+    float m_hitpoints;
 };
 
 #endif

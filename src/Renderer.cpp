@@ -87,7 +87,7 @@ float getDistanceTransform(float const theta, jt::vector2 const cp)
 }
 
 void scaleSprite(std::shared_ptr<jt::SmartDrawable> w, jt::vector2 playerPos, float theta,
-    float angle, jt::vector2 hIntersectionPos, jt::vector2 vIntersectionPos)
+    float angle, jt::vector2 hIntersectionPos, jt::vector2 vIntersectionPos, bool doColor)
 {
     auto const dh = hIntersectionPos - playerPos;
     auto const dv = vIntersectionPos - playerPos;
@@ -99,26 +99,30 @@ void scaleSprite(std::shared_ptr<jt::SmartDrawable> w, jt::vector2 playerPos, fl
     if (lhs > lvs) {
         d = getDistanceTransform(angle, dv);
         dreal = jt::MathHelper::length(dv);
-        if (theta >= 0 && theta < 90) {
-            w->setColor(GP::PaletteWallE());
-        } else if (theta >= 90 && theta < 180) {
-            w->setColor(GP::PaletteWallW());
-        } else if (theta > 180 && theta < 270) {
-            w->setColor(GP::PaletteWallW());
-        } else {
-            w->setColor(GP::PaletteWallE());
+        if (doColor) {
+            if (theta >= 0 && theta < 90) {
+                w->setColor(GP::PaletteWallE());
+            } else if (theta >= 90 && theta < 180) {
+                w->setColor(GP::PaletteWallW());
+            } else if (theta > 180 && theta < 270) {
+                w->setColor(GP::PaletteWallW());
+            } else {
+                w->setColor(GP::PaletteWallE());
+            }
         }
     } else {
         d = getDistanceTransform(angle, dh);
         dreal = jt::MathHelper::length(dh);
-        if (theta >= 0 && theta < 90) {
-            w->setColor(GP::PaletteWallN());
-        } else if (theta >= 90 && theta < 180) {
-            w->setColor(GP::PaletteWallN());
-        } else if (theta > 180 && theta < 270) {
-            w->setColor(GP::PaletteWallS());
-        } else {
-            w->setColor(GP::PaletteWallS());
+        if (doColor) {
+            if (theta >= 0 && theta < 90) {
+                w->setColor(GP::PaletteWallN());
+            } else if (theta >= 90 && theta < 180) {
+                w->setColor(GP::PaletteWallN());
+            } else if (theta > 180 && theta < 270) {
+                w->setColor(GP::PaletteWallS());
+            } else {
+                w->setColor(GP::PaletteWallS());
+            }
         }
     }
 
@@ -197,7 +201,8 @@ void calculateWallScales(jt::vector2 const playerPos, float const angle,
             }
         }
         auto w = walls.at(i);
-        scaleSprite(w->getShape(), playerPos, theta, angle, hIntersectionPos, vIntersectionPos);
+        scaleSprite(
+            w->getShape(), playerPos, theta, angle, hIntersectionPos, vIntersectionPos, true);
     }
 }
 
@@ -218,8 +223,8 @@ void calculateSpriteScale(jt::vector2 const playerPos, float const angle,
     float const xp = (1.0f - spriteAngleOnScreen / GP::RendererFoVAngle()) * GP::GetWindowSize().x()
         / GP::GetZoom();
 
-    scaleSprite(
-        d, playerPos, spriteAngle, angle, spriteWorldPos, jt::vector2 { -90000.0f, -90000.0f });
+    scaleSprite(d, playerPos, spriteAngle, angle, spriteWorldPos,
+        jt::vector2 { -90000.0f, -90000.0f }, false);
 
     auto const s = d->getScale();
     float newScale = s.y() * GP::RendererSpriteScale();

@@ -3,6 +3,7 @@
 
 #include "ContactListener.hpp"
 #include "Enemy.hpp"
+#include "Explosion.hpp"
 #include "GameState.hpp"
 #include "Hud.hpp"
 #include "IntroText.hpp"
@@ -26,11 +27,12 @@ class SmartSprite;
 
 class Hud;
 
-class StateGame : public jt::GameState {
+class StateGame : public jt::GameState, public std::enable_shared_from_this<StateGame> {
 public:
     StateGame(int levelID);
 
     void SpawnShot();
+    void SpawnExplosion(jt::vector2 pos);
 
 private:
     std::shared_ptr<jt::SmartShape> m_background;
@@ -42,9 +44,10 @@ private:
     mutable std::shared_ptr<jt::SmartShape> m_floor;
     std::shared_ptr<Hud> m_hud;
 
-    std::vector<std::shared_ptr<Enemy>> m_enemies;
+    std::shared_ptr<jt::ObjectGroup<Enemy>> m_enemies;
     std::shared_ptr<Symbol> m_symbol;
     std::shared_ptr<jt::ObjectGroup<Shot>> m_shots;
+    std::shared_ptr<jt::ObjectGroup<Explosion>> m_explosions;
 
     std::shared_ptr<jt::SmartShape> m_mapBackground;
     mutable std::shared_ptr<jt::SmartShape> m_mapWall;
