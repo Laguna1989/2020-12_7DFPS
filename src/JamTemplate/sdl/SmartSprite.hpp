@@ -42,6 +42,8 @@ public:
     // graphics memory to ram first.
     jt::color getColorAtPixel(jt::vector2u pixelPos) const;
 
+    void cleanImage();
+
 private:
     mutable std::shared_ptr<SDL_Texture> m_text;
 
@@ -54,6 +56,8 @@ private:
     mutable std::shared_ptr<SDL_Texture> m_textFlash;
     jt::color m_colorFlash { jt::colors::White };
     std::string m_fileName { "" };
+
+    mutable std::shared_ptr<SDL_Surface> m_image { nullptr };
 
     void doUpdate(float /*elapsed*/) override;
 

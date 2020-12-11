@@ -146,8 +146,8 @@ void calculateWallScales(jt::vector2 const playerPos, float const angle,
     float const dx = px - x;
     float const dy = py - y;
 
-    float const angleIncrement = GP::GetFoVAngle() / GP::GetDivisions();
-    float const angleStart = angle - GP::GetFoVAngle() * 0.5f;
+    float const angleIncrement = GP::RendererFoVAngle() / GP::GetDivisions();
+    float const angleStart = angle - GP::RendererFoVAngle() * 0.5f;
 
     for (auto i = 0U; i != GP::GetDivisions(); ++i) {
         // ray direction
@@ -208,20 +208,21 @@ void calculateSpriteScale(jt::vector2 const playerPos, float const angle,
 
     float const spriteAngle = jt::MathHelper::rad2deg(std::atan2(-dist.y(), dist.x()));
 
-    if (spriteAngle < angle - GP::GetFoVAngle() / 2.0f - 10.0f
-        || spriteAngle > angle + GP::GetFoVAngle() / 2.0f + 10.0f) {
+    if (spriteAngle < angle - GP::RendererFoVAngle() / 2.0f - GP::RendererSideToleranceAngle()
+        || spriteAngle > angle + GP::RendererFoVAngle() / 2.0f + GP::RendererSideToleranceAngle()) {
+        d->setScale({ 0.0f, 0.0f });
         return;
     }
 
-    float const spriteAngleOnScreen = spriteAngle - (angle - GP::GetFoVAngle() / 2.0f);
-    float const xp = (1.0f - spriteAngleOnScreen / GP::GetFoVAngle()) * GP::GetWindowSize().x()
+    float const spriteAngleOnScreen = spriteAngle - (angle - GP::RendererFoVAngle() / 2.0f);
+    float const xp = (1.0f - spriteAngleOnScreen / GP::RendererFoVAngle()) * GP::GetWindowSize().x()
         / GP::GetZoom();
 
     scaleSprite(
         d, playerPos, spriteAngle, angle, spriteWorldPos, jt::vector2 { -90000.0f, -90000.0f });
 
     auto const s = d->getScale();
-    float newScale = s.y() * GP::SpriteScale();
+    float newScale = s.y() * GP::RendererSpriteScale();
     d->setScale({ newScale, newScale });
     // std::cout << d->getScale().y() << std::endl;
     auto const p = d->getPosition();

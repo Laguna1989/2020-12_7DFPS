@@ -61,20 +61,24 @@ jt::vector2 const SmartSprite::getOrigin() const { return m_origin; }
 
 jt::color SmartSprite::getColorAtPixel(jt::vector2u pixelPos) const
 {
-    auto image = std::shared_ptr<SDL_Surface>(
-        IMG_Load(m_fileName.c_str()), [](SDL_Surface* s) { SDL_FreeSurface(s); });
-    if (!image) {
-        std::cout << "Warning: file could not be loaded for getpixels\n";
-        return jt::color { 0, 0, 0, 255 };
+    if (!m_image) {
+        m_image = std::shared_ptr<SDL_Surface>(
+            IMG_Load(m_fileName.c_str()), [](SDL_Surface* s) { SDL_FreeSurface(s); });
+        if (!m_image) {
+            std::cout << "Warning: file could not be loaded for getpixels\n";
+            return jt::color { 0, 0, 0, 255 };
+        }
     }
     uint8_t r;
     uint8_t g;
     uint8_t b;
     uint8_t a;
     SDL_GetRGBA(
-        jt::getPixel(image.get(), pixelPos.x(), pixelPos.y()), image->format, &r, &g, &b, &a);
+        jt::getPixel(m_image.get(), pixelPos.x(), pixelPos.y()), m_image->format, &r, &g, &b, &a);
     return jt::color { r, g, b, a };
 }
+
+void SmartSprite::cleanImage() { m_image = nullptr; }
 
 void SmartSprite::doUpdate(float /*elapsed*/) { }
 
