@@ -3,6 +3,7 @@
 
 #include "GameObject.hpp"
 #include "SmartText.hpp"
+#include "TweenBase.hpp"
 #include "color.hpp"
 #include <string>
 #include <vector>
@@ -16,9 +17,11 @@ public:
     float getTotalTime();
 
     void setTextColor(jt::color col);
+    void cancel();
 
 private:
     std::vector<std::shared_ptr<jt::SmartText>> m_texts;
+    std::vector<std::weak_ptr<jt::TweenBase>> m_tweens;
     std::vector<std::string> m_lines;
     float m_lineTime { 3.0f };
     jt::color m_textColor;

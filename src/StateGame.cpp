@@ -59,20 +59,17 @@ void StateGame::doCreate()
     m_overlay->makeRect(jt::vector2 { w, h });
     m_overlay->setColor(jt::color { 0, 0, 0 });
     m_overlay->update(0);
-    auto tw1 = TweenAlpha<SmartShape>::create(
+    m_tween1 = TweenAlpha<SmartShape>::create(
         m_overlay, m_introText->getTotalTime(), std::uint8_t { 255 }, std::uint8_t { 100 });
-    tw1->setSkipFrames();
+    m_tween1->setSkipFrames();
+    add(m_tween1);
 
-    add(tw1);
-    auto tw2
+    m_tween2
         = TweenAlpha<SmartShape>::create(m_overlay, 0.5f, std::uint8_t { 100 }, std::uint8_t { 0 });
-    tw2->setSkipFrames();
-    tw2->setStartDelay(m_introText->getTotalTime());
-    tw2->addCompleteCallback([this]() {
-        m_starting = false;
-        m_player->setTakeInput(true);
-    });
-    add(tw2);
+    m_tween2->setSkipFrames();
+    m_tween2->setStartDelay(m_introText->getTotalTime());
+    m_tween2->addCompleteCallback([this]() { m_player->setTakeInput(true); });
+    add(m_tween2);
 
     m_world->SetContactListener(&m_contactListener);
 }
@@ -167,15 +164,15 @@ void StateGame::doCreateInternal()
 void StateGame::doInternalUpdate(float const elapsed)
 {
     if (jt::InputManager::justPressed(jt::KeyCode::Escape)) {
-        m_starting = false;
         m_introText->update(5000);
+        m_tween1->cancel();
+        m_tween2->cancel();
+        m_introText->cancel();
         m_player->setTakeInput(true);
+        m_overlay->setColor(jt::colors::Transparent);
     }
 
-    if (!m_starting && !m_ending) {
-        if (!m_introText->isDone()) {
-            m_starting = false;
-        }
+    if (!m_ending) {
         // std::cout << "StateGame::do InternalUpdate\n";
         m_background->update(elapsed);
         m_floor->update(elapsed);

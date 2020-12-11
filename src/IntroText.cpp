@@ -3,6 +3,7 @@
 #include "GameProperties.hpp"
 #include "GameState.hpp"
 #include "TweenAlpha.hpp"
+#include "TweenBase.hpp"
 #include <fstream>
 #include <sstream>
 
@@ -35,10 +36,14 @@ void IntroText::doCreate()
         auto tweenAlphaFadeIn = ta::create(t, timeOffset * fadeInPerc, 0U, 255U);
         tweenAlphaFadeIn->setStartDelay(timeOffset * i);
         getGame()->getCurrentSate()->add(tweenAlphaFadeIn);
+        std::weak_ptr<jt::TweenBase> wp1 = tweenAlphaFadeIn;
+        m_tweens.push_back(wp1);
 
         auto tweenAlphaFadeOut = ta::create(t, timeOffset * fadeOutPec, 255U, 0U);
         tweenAlphaFadeOut->setStartDelay(timeOffset * i + (fadeInPerc + stayPerc) * timeOffset);
         getGame()->getCurrentSate()->add(tweenAlphaFadeOut);
+        std::weak_ptr<jt::TweenBase> wp2 = tweenAlphaFadeOut;
+        m_tweens.push_back(wp2);
     }
 }
 void IntroText::doUpdate(float const elapsed)
@@ -68,4 +73,16 @@ void IntroText::setTextColor(jt::color col)
     for (auto& t : m_texts) {
         t->setColor(col);
     }
+}
+void IntroText::cancel()
+{
+    for (auto& wp : m_tweens) {
+        if (wp.expired()) {
+            continue;
+        }
+        auto const p = wp.lock();
+        p->cancel();
+    }
+
+    setTextColor(jt::colors::Transparent);
 }

@@ -10,7 +10,9 @@
 #include "ObjectGroup.hpp"
 #include "Player.hpp"
 #include "Shot.hpp"
+#include "SmartShape.hpp"
 #include "Symbol.hpp"
+#include "TweenAlpha.hpp"
 #include "Wall.hpp"
 #include <iostream>
 #include <memory>
@@ -18,7 +20,6 @@
 
 // fwd decls
 namespace jt {
-class SmartShape;
 class SmartText;
 class SmartSprite;
 } // namespace jt
@@ -57,10 +58,12 @@ private:
     std::string m_levelFileName;
     int m_levelID;
 
-    bool m_starting { false };
     bool m_ending { false };
 
     MyContactListener m_contactListener;
+
+    std::shared_ptr<jt::TweenBase> m_tween1;
+    std::shared_ptr<jt::TweenBase> m_tween2;
 
     void doCreate() override;
 
