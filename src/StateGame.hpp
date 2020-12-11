@@ -65,6 +65,8 @@ private:
     std::shared_ptr<jt::TweenBase> m_tween1;
     std::shared_ptr<jt::TweenBase> m_tween2;
 
+    bool m_drawMiniMap { true };
+
     void doCreate() override;
 
     virtual void doCreateInternal();

@@ -178,6 +178,11 @@ void StateGame::doInternalUpdate(float const elapsed)
         m_floor->update(elapsed);
         m_sky->update(elapsed);
 
+        if (jt::InputManager::justPressed(jt::KeyCode::Tab)
+            || jt::InputManager::justPressed(jt::KeyCode::M)) {
+            m_drawMiniMap = !m_drawMiniMap;
+        }
+
         int32 velocityIterations = 6;
         int32 positionIterations = 2;
         m_world->Step(elapsed, velocityIterations, positionIterations);
@@ -193,8 +198,8 @@ void StateGame::doInternalUpdate(float const elapsed)
             e->update(elapsed);
         }
 
-        ::calculateSpriteScale(m_player->getPosition(), m_player->angle, m_symbol->getPosition(),
-            m_symbol->getSprite());
+        ::calculateSpriteScale(
+            m_player->getPosition(), m_player->angle, m_symbol->getPosition(), m_symbol->getAnim());
         m_symbol->update(elapsed);
 
         for (auto& s : *m_shots) {
@@ -243,7 +248,7 @@ void StateGame::doInternalDraw() const
     for (auto const& e : m_enemies) {
         zMap[-e->getAnimation()->getZDist()].push_back(e);
     }
-    zMap[-m_symbol->getSprite()->getZDist()].push_back(m_symbol);
+    zMap[-m_symbol->getAnim()->getZDist()].push_back(m_symbol);
     for (auto& s : *m_shots) {
         if (s.expired()) {
             continue;
@@ -271,19 +276,22 @@ void StateGame::calculateWallScales()
 
 void StateGame::drawMap() const
 {
-    // std::cout << "StateGame::drawMap\n";
-    m_mapBackground->draw(getGame()->getRenderTarget());
+    if (m_drawMiniMap) {
+        // std::cout << "StateGame::drawMap\n";
+        m_mapBackground->draw(getGame()->getRenderTarget());
 
-    m_mapPlayer->draw(getGame()->getRenderTarget());
+        m_mapPlayer->draw(getGame()->getRenderTarget());
 
-    for (size_t i = 0U; i != m_level->getLevelSizeInTiles().x(); ++i) {
-        for (size_t j = 0U; j != m_level->getLevelSizeInTiles().y(); ++j) {
-            if (m_level->getTileTypeAt(static_cast<unsigned int>(i), static_cast<unsigned int>(j))
-                == Level::TileType::WALL) {
-                m_mapWall->setPosition(
-                    { 1.0f * i * GP::MapTileSizeInPixel(), 1.0f * j * GP::MapTileSizeInPixel() });
-                m_mapWall->update(0.0f);
-                m_mapWall->draw(getGame()->getRenderTarget());
+        for (size_t i = 0U; i != m_level->getLevelSizeInTiles().x(); ++i) {
+            for (size_t j = 0U; j != m_level->getLevelSizeInTiles().y(); ++j) {
+                if (m_level->getTileTypeAt(
+                        static_cast<unsigned int>(i), static_cast<unsigned int>(j))
+                    == Level::TileType::WALL) {
+                    m_mapWall->setPosition({ 1.0f * i * GP::MapTileSizeInPixel(),
+                        1.0f * j * GP::MapTileSizeInPixel() });
+                    m_mapWall->update(0.0f);
+                    m_mapWall->draw(getGame()->getRenderTarget());
+                }
             }
         }
     }

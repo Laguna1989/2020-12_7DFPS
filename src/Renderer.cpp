@@ -206,7 +206,7 @@ void calculateSpriteScale(jt::vector2 const playerPos, float const angle,
 {
     const jt::vector2 dist = spriteWorldPos - playerPos;
 
-    float const spriteAngle = jt::MathHelper::rad2deg(std::atan2(-dist.y(), dist.x()));
+    float const spriteAngle = wrapAngle(jt::MathHelper::rad2deg(std::atan2(-dist.y(), dist.x())));
 
     if (spriteAngle < angle - GP::RendererFoVAngle() / 2.0f - GP::RendererSideToleranceAngle()
         || spriteAngle > angle + GP::RendererFoVAngle() / 2.0f + GP::RendererSideToleranceAngle()) {

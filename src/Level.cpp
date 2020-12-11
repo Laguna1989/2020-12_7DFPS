@@ -44,6 +44,7 @@ void Level::loadLevel(std::string const& fileName, std::shared_ptr<b2World> worl
                     m_enemyPositions.push_back(
                         jt::vector2 { static_cast<float>(i), static_cast<float>(j) });
                 } else if (c.r() == 0 && c.g() == 0 && c.b() == 255) {
+                    // symbol
                     m_symbolPosition = jt::vector2 { static_cast<float>(i), static_cast<float>(j) };
                 }
                 m_levelVec.at(posToIndex(i, j)) = Level::TileType::EMPTY;
