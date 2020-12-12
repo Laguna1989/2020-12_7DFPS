@@ -14,11 +14,15 @@ class Player;
 class LevelWall : public jt::Box2DObject {
 public:
     LevelWall(std::shared_ptr<b2World> world, b2BodyDef const* def);
+    // for dynamically changing the level
+    unsigned int m_tx { 0 };
+    unsigned int m_ty { 0 };
+    std::size_t m_forceID { 0 };
 };
 
 class Level {
 public:
-    enum class TileType : std::uint8_t { EMPTY, WALL };
+    enum class TileType : std::uint8_t { EMPTY, WALL, FORCE };
 
     void loadLevel(std::string const& fileName, std::shared_ptr<b2World> world);
 
@@ -31,6 +35,8 @@ public:
     std::vector<jt::vector2> getEnemyPositions() const;
     jt::vector2 getSymbolPosition() const;
 
+    void PopForceField(std::size_t forceFieldID);
+
 private:
     std::vector<TileType> m_levelVec {};
     jt::vector2u m_levelSize { 0, 0 };
@@ -40,6 +46,7 @@ private:
     std::size_t posToIndex(unsigned int x, unsigned int y) const;
     std::vector<jt::vector2> m_enemyPositions;
     jt::vector2 m_symbolPosition;
+    std::map<std::size_t, std::vector<std::shared_ptr<LevelWall>>> m_ForceFields;
 };
 
 #endif

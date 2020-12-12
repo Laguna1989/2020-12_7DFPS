@@ -38,7 +38,11 @@ private:
     std::shared_ptr<jt::SmartShape> m_background;
     std::shared_ptr<jt::SmartShape> m_overlay;
 
+    // walls for drawing, not the actual walls in the level.
     std::vector<std::shared_ptr<Wall>> m_walls;
+
+    std::vector<std::shared_ptr<Wall>> m_forceFields;
+
     std::shared_ptr<Player> m_player;
     mutable std::shared_ptr<jt::SmartShape> m_sky;
     mutable std::shared_ptr<jt::SmartShape> m_floor;
@@ -54,6 +58,8 @@ private:
     std::shared_ptr<jt::SmartShape> m_mapPlayer;
 
     std::shared_ptr<b2World> m_world { nullptr };
+
+    std::array<bool, 255> m_hasKey {};
 
     std::shared_ptr<IntroText> m_introText;
 
@@ -78,6 +84,7 @@ private:
     virtual void doInternalDraw() const override;
 
     void calculateWallScales();
+    void calculateForceFieldScales();
     void drawMap() const;
 };
 

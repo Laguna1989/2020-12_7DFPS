@@ -1,6 +1,7 @@
 ﻿#include "Level.hpp"
 #include "GameProperties.hpp"
 #include "Player.hpp"
+#include <iostream>
 
 LevelWall ::LevelWall(std::shared_ptr<b2World> world, b2BodyDef const* def)
     : Box2DObject { world, def }
@@ -34,6 +35,14 @@ void Level::loadLevel(std::string const& fileName, std::shared_ptr<b2World> worl
                 m_levelVec.at(posToIndex(i, j)) = Level::TileType::WALL;
                 wallBodyDef.position = b2Vec2 { static_cast<float>(i), static_cast<float>(j) };
                 LevelWall const w { world, &wallBodyDef };
+            } else if (c.r() == 255U && c.b() == 255) {
+                m_levelVec.at(posToIndex(i, j)) = Level::TileType::FORCE;
+                wallBodyDef.position = b2Vec2 { static_cast<float>(i), static_cast<float>(j) };
+                auto const w = std::make_shared<LevelWall>(world, &wallBodyDef);
+                w->m_forceID = c.g();
+                w->m_tx = i;
+                w->m_ty = j;
+                m_ForceFields[c.g()].push_back(w);
             } else {
                 if (c.r() == 0 && c.g() == 255) {
                     // player start
@@ -74,3 +83,22 @@ std::size_t Level::posToIndex(unsigned int x, unsigned int y) const
 std::vector<jt::vector2> Level::getEnemyPositions() const { return m_enemyPositions; };
 
 jt::vector2 Level::getSymbolPosition() const { return m_symbolPosition; }
+
+void Level::PopForceField(std::size_t forceFieldID)
+{
+    for (auto const& w : m_ForceFields.at(forceFieldID)) {
+        if (w->m_forceID != forceFieldID) {
+            std::cout << "Warning: level data does not match!";
+        }
+        auto const x = w->m_tx;
+        auto const y = w->m_ty;
+        auto const idx = posToIndex(x, y);
+        if (m_levelVec.at(idx) != Level::TileType::FORCE) {
+            std::cout << "Warning: level data does not match!";
+        }
+        m_levelVec.at(idx) = Level::TileType::EMPTY;
+        w->destroy(); // get rid of collider
+    }
+    // clean entry in force field list
+    m_ForceFields.at(forceFieldID) = {};
+}

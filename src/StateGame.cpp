@@ -82,13 +82,24 @@ void StateGame::doCreateInternal()
         auto w = std::make_shared<Wall>();
         float const binWidth = GP::GetWindowSize().x() / GP::GetZoom() / GP::GetDivisions();
         w->getShape()->makeRect({ binWidth, GP::GetWindowSize().y() / GP::GetZoom() });
-        w->getShape()->setColor(jt::Random::getRandomColor());
         w->getShape()->setPosition({ static_cast<float>(i * binWidth), 0.0f });
         m_walls.at(i) = w;
         add(w);
     }
     // reverse for wall segments being rendered from right to left (mathematical positive angle)
     std::reverse(m_walls.begin(), m_walls.end());
+
+    m_forceFields.resize(GP::GetDivisions());
+    for (auto i = 0U; i != GP::GetDivisions(); ++i) {
+        auto w = std::make_shared<Wall>();
+        float const binWidth = GP::GetWindowSize().x() / GP::GetZoom() / GP::GetDivisions();
+        w->getShape()->makeRect({ binWidth, GP::GetWindowSize().y() / GP::GetZoom() });
+        w->getShape()->setPosition({ static_cast<float>(i * binWidth), 0.0f });
+        m_forceFields.at(i) = w;
+        add(w);
+    }
+    // reverse for wall segments being rendered from right to left (mathematical positive angle)
+    std::reverse(m_forceFields.begin(), m_forceFields.end());
 
     // std::cout << "StateGame::do CreateInternal 2\n";
     m_level = std::make_shared<Level>();
@@ -189,12 +200,20 @@ void StateGame::doInternalUpdate(float const elapsed)
             m_drawMiniMap = !m_drawMiniMap;
         }
 
+        if (jt::InputManager::justPressed(jt::KeyCode::U)) {
+            m_level->PopForceField(0);
+        }
+
         int32 velocityIterations = 6;
         int32 positionIterations = 2;
         m_world->Step(elapsed, velocityIterations, positionIterations);
 
         calculateWallScales();
         for (auto const& w : m_walls) {
+            w->update(elapsed);
+        }
+        calculateForceFieldScales();
+        for (auto const& w : m_forceFields) {
             w->update(elapsed);
         }
 
@@ -265,6 +284,9 @@ void StateGame::doInternalDraw() const
     for (auto const& w : m_walls) {
         zMap[-w->getShape()->getZDist()].push_back(w);
     }
+    for (auto const& w : m_forceFields) {
+        zMap[-w->getShape()->getZDist()].push_back(w);
+    }
     for (auto const& wp : *m_enemies) {
         if (wp.expired()) {
             continue;
@@ -306,6 +328,15 @@ void StateGame::calculateWallScales()
     ::calculateWallScales(m_player->getPosition(), m_player->angle, m_level, m_walls);
 }
 
+void StateGame::calculateForceFieldScales()
+{
+    // std::cout << "StateGame::calculateWallScales\n";
+    ::calculateWallScales(m_player->getPosition(), m_player->angle, m_level, m_forceFields, true);
+    for (auto const w : m_forceFields) {
+        w->getShape()->setColor(jt::color { 0, 100, 255, 100 });
+    }
+}
+
 void StateGame::drawMap() const
 {
     if (m_drawMiniMap) {
@@ -335,16 +366,17 @@ void StateGame::SpawnShot()
     shotBodyDef.type = b2_dynamicBody;
     shotBodyDef.fixedRotation = true;
     shotBodyDef.linearDamping = 0.0f;
-    float const a = m_player->angle;
+    float const a = wrapAngle(m_player->angle);
     jt::vector2 const dir { mycos(a), -mysin(a) };
     // std::cout << dir.x() << " " << dir.y() << std::endl;
+    // std::cout << a << std::endl;
     shotBodyDef.position.Set(
         m_player->getPosition().x() + dir.x() + 0.0f, m_player->getPosition().y() + dir.y() + 0.0f);
     auto s = std::make_shared<Shot>(m_world, &shotBodyDef);
     s->setVelocity(dir * GP::ShotSpeed());
     s->setState(weak_from_this());
     add(s);
-    s->update(1.0f / 60.0f);
+    s->update(0.0f);
     m_shots->push_back(s);
 }
 
@@ -352,6 +384,7 @@ void StateGame::SpawnExplosion(jt::vector2 pos)
 {
     auto const ex = std::make_shared<Explosion>(pos);
     add(ex);
+    ex->update(0.0f);
     using ta = jt::TweenAlpha<jt::SmartShape>;
     auto tw = ta::create(ex->getShape(), 0.75f, 255U, 0U);
     tw->addCompleteCallback([ex = ex]() { ex->kill(); });

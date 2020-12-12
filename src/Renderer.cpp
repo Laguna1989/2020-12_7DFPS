@@ -136,8 +136,14 @@ void scaleSprite(std::shared_ptr<jt::SmartDrawable> w, jt::vector2 playerPos, fl
 } // namespace
 
 void calculateWallScales(jt::vector2 const playerPos, float const angle,
-    std::shared_ptr<Level> const level, std::vector<std::shared_ptr<Wall>>& walls)
+    std::shared_ptr<Level> const level, std::vector<std::shared_ptr<Wall>>& walls,
+    bool isForceField)
 {
+    // reset all walls to zero size
+    for (auto const& w : walls) {
+        w->getShape()->setScale({ 1.0f, 0.0f });
+    }
+
     // player absolut position
     float const px = playerPos.x() + 0.45f;
     float const py = playerPos.y() + 0.45f;
@@ -153,12 +159,15 @@ void calculateWallScales(jt::vector2 const playerPos, float const angle,
     float const angleIncrement = GP::RendererFoVAngle() / GP::GetDivisions();
     float const angleStart = angle - GP::RendererFoVAngle() * 0.5f;
 
+    Level::TileType const expectedTileType
+        = (isForceField ? Level::TileType::FORCE : Level::TileType::WALL);
+
     for (auto i = 0U; i != GP::GetDivisions(); ++i) {
         // ray direction
         float const theta = wrapAngle(angleStart + i * angleIncrement);
 
-        jt::vector2 vIntersectionPos {};
-        jt::vector2 hIntersectionPos {};
+        jt::vector2 vIntersectionPos { -500000.0f, -500000.0f };
+        jt::vector2 hIntersectionPos { -500000.0f, -500000.0f };
 
         {
             // horizontal grid intersections
@@ -172,7 +181,7 @@ void calculateWallScales(jt::vector2 const playerPos, float const angle,
                     || ttcy >= static_cast<int>(level->getLevelSizeInTiles().y())) {
                     break;
                 }
-                if (level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
+                if (level->getTileTypeAt(ttcx, ttcy) == expectedTileType) {
                     hIntersectionPos = hn;
                     break;
                 }
@@ -192,7 +201,7 @@ void calculateWallScales(jt::vector2 const playerPos, float const angle,
                     || ttcy >= static_cast<int>(level->getLevelSizeInTiles().y())) {
                     break;
                 }
-                if (level->getTileTypeAt(ttcx, ttcy) == Level::TileType::WALL) {
+                if (level->getTileTypeAt(ttcx, ttcy) == expectedTileType) {
                     vIntersectionPos = vn;
                     break;
                 }
@@ -213,13 +222,16 @@ void calculateSpriteScale(jt::vector2 const playerPos, float const angle,
 
     float const spriteAngle = wrapAngle(jt::MathHelper::rad2deg(std::atan2(-dist.y(), dist.x())));
 
-    if (spriteAngle < angle - GP::RendererFoVAngle() / 2.0f - GP::RendererSideToleranceAngle()
-        || spriteAngle > angle + GP::RendererFoVAngle() / 2.0f + GP::RendererSideToleranceAngle()) {
+    float a = wrapAngle(angle);
+
+    if (spriteAngle < a - GP::RendererFoVAngle() / 2.0f - GP::RendererSideToleranceAngle()
+        || spriteAngle > a + GP::RendererFoVAngle() / 2.0f + GP::RendererSideToleranceAngle()) {
         d->setScale({ 0.0f, 0.0f });
         return;
     }
 
-    float const spriteAngleOnScreen = spriteAngle - (angle - GP::RendererFoVAngle() / 2.0f);
+    float const spriteAngleOnScreen
+        = wrapAngle(spriteAngle - (angle - GP::RendererFoVAngle() / 2.0f));
     float const xp = (1.0f - spriteAngleOnScreen / GP::RendererFoVAngle()) * GP::GetWindowSize().x()
         / GP::GetZoom();
 
