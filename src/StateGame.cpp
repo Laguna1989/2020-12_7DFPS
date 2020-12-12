@@ -118,7 +118,32 @@ void StateGame::doCreateInternal()
     m_player->setTakeInput(false);
     add(m_player);
 
-    // std::cout << "StateGame::do CreateInternal 3\n";
+    m_enemies = std::make_shared<jt::ObjectGroup<Enemy>>();
+    add(m_enemies);
+
+    for (auto const& enemyPosition : m_level->getEnemyPositions()) {
+        playerBodyDef.position = jt::Conversion::vec(enemyPosition);
+        auto e = std::make_shared<Enemy>(m_world, &playerBodyDef);
+        add(e);
+        /*   e->getAnimation()->setPosition({ 100, 150 });*/
+        m_enemies->push_back(e);
+    }
+
+    m_shots = std::make_shared<jt::ObjectGroup<Shot>>();
+    add(m_shots);
+
+    m_explosions = std::make_shared<jt::ObjectGroup<Explosion>>();
+    add(m_explosions);
+
+    m_keys = std::make_shared<jt::ObjectGroup<Key>>();
+    add(m_keys);
+
+    for (auto kvp : m_level->getKeyPositions()) {
+        auto const k = std::make_shared<Key>(kvp.second, kvp.first);
+        add(k);
+        m_keys->push_back(k);
+    }
+
     m_mapBackground = std::make_shared<jt::SmartShape>();
 
     m_mapBackground->makeRect(
@@ -148,25 +173,6 @@ void StateGame::doCreateInternal()
         GP::GetWindowSize().x() / GP::GetZoom(), GP::GetWindowSize().y() / 2.0f / GP::GetZoom() });
     m_floor->setColor(GP::PalletteFloor());
     m_floor->setPosition({ 0, GP::GetWindowSize().y() * (0.5f / GP::GetZoom()) });
-
-    m_enemies = std::make_shared<jt::ObjectGroup<Enemy>>();
-    add(m_enemies);
-
-    m_shots = std::make_shared<jt::ObjectGroup<Shot>>();
-    add(m_shots);
-
-    m_explosions = std::make_shared<jt::ObjectGroup<Explosion>>();
-    add(m_explosions);
-
-    for (auto const& enemyPosition : m_level->getEnemyPositions()) {
-        playerBodyDef.position = jt::Conversion::vec(enemyPosition);
-        auto e = std::make_shared<Enemy>(m_world, &playerBodyDef);
-        add(e);
-        /*   e->getAnimation()->setPosition({ 100, 150 });*/
-        m_enemies->push_back(e);
-    }
-
-    // std::cout << "StateGame::do CreateInternal 5\n";
 
     m_hud = std::make_shared<Hud>();
 
@@ -249,6 +255,23 @@ void StateGame::doInternalUpdate(float const elapsed)
 
             sp->update(elapsed);
         }
+        for (auto& k : *m_keys) {
+            if (k.expired()) {
+                continue;
+            }
+            auto const sp = k.lock();
+            ::calculateSpriteScale(
+                m_player->getPosition(), m_player->angle, sp->getPosition(), sp->getAnim());
+
+            auto const dist = sp->getPosition() - m_player->getPosition();
+            auto const l = jt::MathHelper::length(dist);
+            if (l <= 1.0f) {
+                m_level->PopForceField(sp->getKeyID());
+                sp->kill();
+            }
+
+            sp->update(elapsed);
+        }
 
         m_overlay->update(elapsed);
         m_mapPlayer->setPosition(
@@ -309,6 +332,14 @@ void StateGame::doInternalDraw() const
         }
         auto sp = s.lock();
         zMap[-sp->getShape()->getZDist()].push_back(sp);
+    }
+
+    for (auto& s : *m_keys) {
+        if (s.expired()) {
+            continue;
+        }
+        auto sp = s.lock();
+        zMap[-sp->getAnim()->getZDist()].push_back(sp);
     }
 
     for (auto const& kvp : zMap) {

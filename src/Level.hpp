@@ -34,7 +34,7 @@ public:
     float getPlayerStartAngle() const;
     std::vector<jt::vector2> getEnemyPositions() const;
     jt::vector2 getSymbolPosition() const;
-
+    std::map<std::size_t, jt::vector2> getKeyPositions() const;
     void PopForceField(std::size_t forceFieldID);
 
 private:
@@ -45,7 +45,10 @@ private:
 
     std::size_t posToIndex(unsigned int x, unsigned int y) const;
     std::vector<jt::vector2> m_enemyPositions;
+
     jt::vector2 m_symbolPosition;
+
+    std::map<std::size_t, jt::vector2> m_keyPositions;
     std::map<std::size_t, std::vector<std::shared_ptr<LevelWall>>> m_ForceFields;
 };
 

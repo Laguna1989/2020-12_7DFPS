@@ -30,7 +30,9 @@ void Level::loadLevel(std::string const& fileName, std::shared_ptr<b2World> worl
 
     for (unsigned int j = 0; j != m_levelSize.y(); ++j) {
         for (unsigned int i = 0; i != m_levelSize.x(); ++i) {
+            // get color at tile position i, j
             auto const c = level->getColorAtPixel({ i, j });
+
             if (c == jt::colors::White) {
                 m_levelVec.at(posToIndex(i, j)) = Level::TileType::WALL;
                 wallBodyDef.position = b2Vec2 { static_cast<float>(i), static_cast<float>(j) };
@@ -43,19 +45,23 @@ void Level::loadLevel(std::string const& fileName, std::shared_ptr<b2World> worl
                 w->m_tx = i;
                 w->m_ty = j;
                 m_ForceFields[c.g()].push_back(w);
+            } else if (c.r() == 0 && c.g() == 255) {
+                // player start
+                m_playerStart = jt::vector2u { i, j };
+                m_playerStartAngle = 90.0f * c.b();
+            } else if (c.r() == 255 && c.g() == 0 && c.b() == 0) {
+                // enemy position
+                m_enemyPositions.push_back(
+                    jt::vector2 { static_cast<float>(i), static_cast<float>(j) });
+            } else if (c.r() == 0 && c.g() == 0 && c.b() == 255) {
+                // symbol
+                m_symbolPosition = jt::vector2 { static_cast<float>(i), static_cast<float>(j) };
+            } else if (c.r() == 255 && c.g() == 255) {
+                // key
+                m_keyPositions[c.b()]
+                    = jt::vector2 { static_cast<float>(i), static_cast<float>(j) };
             } else {
-                if (c.r() == 0 && c.g() == 255) {
-                    // player start
-                    m_playerStart = jt::vector2u { i, j };
-                    m_playerStartAngle = 90.0f * c.b();
-                } else if (c.r() == 255 && c.g() == 0 && c.b() == 0) {
-                    // enemy position
-                    m_enemyPositions.push_back(
-                        jt::vector2 { static_cast<float>(i), static_cast<float>(j) });
-                } else if (c.r() == 0 && c.g() == 0 && c.b() == 255) {
-                    // symbol
-                    m_symbolPosition = jt::vector2 { static_cast<float>(i), static_cast<float>(j) };
-                }
+
                 m_levelVec.at(posToIndex(i, j)) = Level::TileType::EMPTY;
             }
         }
@@ -83,6 +89,8 @@ std::size_t Level::posToIndex(unsigned int x, unsigned int y) const
 std::vector<jt::vector2> Level::getEnemyPositions() const { return m_enemyPositions; };
 
 jt::vector2 Level::getSymbolPosition() const { return m_symbolPosition; }
+
+std::map<std::size_t, jt::vector2> Level::getKeyPositions() const { return m_keyPositions; }
 
 void Level::PopForceField(std::size_t forceFieldID)
 {

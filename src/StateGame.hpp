@@ -7,6 +7,7 @@
 #include "GameState.hpp"
 #include "Hud.hpp"
 #include "IntroText.hpp"
+#include "Key.hpp"
 #include "Level.hpp"
 #include "ObjectGroup.hpp"
 #include "Player.hpp"
@@ -59,6 +60,7 @@ private:
 
     std::shared_ptr<b2World> m_world { nullptr };
 
+    std::shared_ptr<jt::ObjectGroup<Key>> m_keys;
     std::array<bool, 255> m_hasKey {};
 
     std::shared_ptr<IntroText> m_introText;
