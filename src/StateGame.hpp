@@ -61,7 +61,6 @@ private:
     std::shared_ptr<b2World> m_world { nullptr };
 
     std::shared_ptr<jt::ObjectGroup<Key>> m_keys;
-    std::array<bool, 255> m_hasKey {};
 
     std::shared_ptr<IntroText> m_introText;
 

@@ -50,10 +50,11 @@ void Player::doUpdate(float elapsed)
 
 void Player::handleInput(float elapsed)
 {
-    if (jt::InputManager::pressed(jt::KeyCode::D)) {
+    if (jt::InputManager::pressed(jt::KeyCode::E)
+        || jt::InputManager::pressed(jt::KeyCode::Right)) {
         angle -= elapsed * GP::PlayerTurningSpeed();
     }
-    if (jt::InputManager::pressed(jt::KeyCode::A)) {
+    if (jt::InputManager::pressed(jt::KeyCode::Q) || jt::InputManager::pressed(jt::KeyCode::Left)) {
         angle += elapsed * GP::PlayerTurningSpeed();
     }
     jt::vector2 const dir
@@ -63,6 +64,15 @@ void Player::handleInput(float elapsed)
     }
     if (jt::InputManager::pressed(jt::KeyCode::S)) {
         getB2Body()->ApplyForceToCenter(vec(-1.0f * dir * GP::PlayerAccelerationFactor()), true);
+    }
+
+    jt::vector2 const perp = jt::MathHelper::rotateBy(dir, 90);
+
+    if (jt::InputManager::pressed(jt::KeyCode::A)) {
+        getB2Body()->ApplyForceToCenter(vec(perp * GP::PlayerAccelerationFactor()), true);
+    }
+    if (jt::InputManager::pressed(jt::KeyCode::D)) {
+        getB2Body()->ApplyForceToCenter(vec(-1.0f * perp * GP::PlayerAccelerationFactor()), true);
     }
 
     if (jt::InputManager::justPressed(jt::KeyCode::Space)) {

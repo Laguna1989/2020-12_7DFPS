@@ -45,24 +45,32 @@ void Level::loadLevel(std::string const& fileName, std::shared_ptr<b2World> worl
                 w->m_tx = i;
                 w->m_ty = j;
                 m_ForceFields[c.g()].push_back(w);
-            } else if (c.r() == 0 && c.g() == 255) {
-                // player start
-                m_playerStart = jt::vector2u { i, j };
-                m_playerStartAngle = 90.0f * c.b();
-            } else if (c.r() == 255 && c.g() == 0 && c.b() == 0) {
-                // enemy position
-                m_enemyPositions.push_back(
-                    jt::vector2 { static_cast<float>(i), static_cast<float>(j) });
-            } else if (c.r() == 0 && c.g() == 0 && c.b() == 255) {
-                // symbol
-                m_symbolPosition = jt::vector2 { static_cast<float>(i), static_cast<float>(j) };
-            } else if (c.r() == 255 && c.g() == 255) {
-                // key
-                m_keyPositions[c.b()]
-                    = jt::vector2 { static_cast<float>(i), static_cast<float>(j) };
-            } else {
 
+            } else {
                 m_levelVec.at(posToIndex(i, j)) = Level::TileType::EMPTY;
+
+                if (c.r() == 0 && c.g() == 255) {
+                    // player start
+                    m_playerStart = jt::vector2u { i, j };
+                    m_playerStartAngle = 90.0f * c.b();
+                } else if (c.r() == 255 && c.g() == 0 && c.b() == 0) {
+                    // enemy position
+                    m_enemyPositions.push_back(
+                        jt::vector2 { static_cast<float>(i), static_cast<float>(j) });
+                } else if (c.r() == 0 && c.g() == 0 && c.b() == 255) {
+                    // symbol
+                    m_symbolPosition = jt::vector2 { static_cast<float>(i), static_cast<float>(j) };
+                } else if (c.r() == 255 && c.g() == 255) {
+                    // key
+                    m_keyPositions[c.b()]
+                        = jt::vector2 { static_cast<float>(i), static_cast<float>(j) };
+                } else if (c.r() == 100 && c.g() == 100 && c.b() == 255) {
+                    // map item
+                } else if (c.r() == 50 && c.g() == 255 && c.b() == 50) {
+                    // ammunition
+                } else if (c.r() == 255 && c.g() == 50 && c.b() == 50) {
+                    // healthpack
+                }
             }
         }
     }

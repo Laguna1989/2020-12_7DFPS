@@ -205,9 +205,17 @@ void StateGame::doInternalUpdate(float const elapsed)
             || jt::InputManager::justPressed(jt::KeyCode::M)) {
             m_drawMiniMap = !m_drawMiniMap;
         }
-
-        if (jt::InputManager::justPressed(jt::KeyCode::U)) {
-            m_level->PopForceField(0);
+        if (jt::InputManager::justPressed(jt::KeyCode::F1)) {
+            getGame()->switchState(std::make_shared<StateGame>(1));
+        }
+        if (jt::InputManager::justPressed(jt::KeyCode::F2)) {
+            getGame()->switchState(std::make_shared<StateGame>(2));
+        }
+        if (jt::InputManager::justPressed(jt::KeyCode::F3)) {
+            getGame()->switchState(std::make_shared<StateGame>(3));
+        }
+        if (jt::InputManager::justPressed(jt::KeyCode::F4)) {
+            getGame()->switchState(std::make_shared<StateGame>(4));
         }
 
         int32 velocityIterations = 6;
