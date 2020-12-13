@@ -144,8 +144,24 @@ void StateGame::doCreateInternal()
         m_keys->push_back(k);
     }
 
-    m_mapBackground = std::make_shared<jt::SmartShape>();
+    m_ammoPacks = std::make_shared<jt::ObjectGroup<AmmoPack>>();
+    add(m_ammoPacks);
 
+    for (auto const& v : m_level->getAmmoPackPositions()) {
+        auto const a = std::make_shared<AmmoPack>(v);
+        add(a);
+        m_ammoPacks->push_back(a);
+    }
+
+    m_healthPacks = std::make_shared<jt::ObjectGroup<HealthPack>>();
+    add(m_healthPacks);
+    for (auto const& v : m_level->getHealthPackPositions()) {
+        auto const a = std::make_shared<HealthPack>(v);
+        add(a);
+        m_healthPacks->push_back(a);
+    }
+
+    m_mapBackground = std::make_shared<jt::SmartShape>();
     m_mapBackground->makeRect(
         { static_cast<float>(m_level->getLevelSizeInTiles().x() * GP::MapTileSizeInPixel()),
             static_cast<float>(m_level->getLevelSizeInTiles().y() * GP::MapTileSizeInPixel()) });
@@ -200,6 +216,8 @@ void StateGame::doInternalUpdate(float const elapsed)
         m_background->update(elapsed);
         m_floor->update(elapsed);
         m_sky->update(elapsed);
+        m_hud->setAmmo(m_player->getAmmo());
+        m_hud->update(elapsed);
 
         if (jt::InputManager::justPressed(jt::KeyCode::Tab)
             || jt::InputManager::justPressed(jt::KeyCode::M)) {
@@ -281,6 +299,46 @@ void StateGame::doInternalUpdate(float const elapsed)
             sp->update(elapsed);
         }
 
+        for (auto& k : *m_ammoPacks) {
+            if (k.expired()) {
+                continue;
+            }
+            auto const sp = k.lock();
+            ::calculateSpriteScale(
+                m_player->getPosition(), m_player->angle, sp->getPosition(), sp->getAnim());
+
+            auto const dist = sp->getPosition() - m_player->getPosition();
+            auto const l = jt::MathHelper::length(dist);
+            if (l <= 1.0f) {
+                m_player->pickUpAmmo();
+                auto col = jt::colors::Blue;
+                col.a() = 100;
+                m_overlay->flash(0.5f, col);
+                sp->kill();
+            }
+            sp->update(elapsed);
+        }
+
+        for (auto& k : *m_healthPacks) {
+            if (k.expired()) {
+                continue;
+            }
+            auto const sp = k.lock();
+            ::calculateSpriteScale(
+                m_player->getPosition(), m_player->angle, sp->getPosition(), sp->getAnim());
+
+            auto const dist = sp->getPosition() - m_player->getPosition();
+            auto const l = jt::MathHelper::length(dist);
+            if (l <= 1.0f) {
+                m_player->pickUpHealth();
+                auto col = jt::colors::Green;
+                col.a() = 100;
+                m_overlay->flash(0.5f, col);
+                sp->kill();
+            }
+            sp->update(elapsed);
+        }
+
         m_overlay->update(elapsed);
         m_mapPlayer->setPosition(
             m_player->getPosition() * static_cast<float>(GP::MapTileSizeInPixel()));
@@ -349,6 +407,20 @@ void StateGame::doInternalDraw() const
         auto sp = s.lock();
         zMap[-sp->getAnim()->getZDist()].push_back(sp);
     }
+    for (auto& s : *m_ammoPacks) {
+        if (s.expired()) {
+            continue;
+        }
+        auto sp = s.lock();
+        zMap[-sp->getAnim()->getZDist()].push_back(sp);
+    }
+    for (auto& s : *m_healthPacks) {
+        if (s.expired()) {
+            continue;
+        }
+        auto sp = s.lock();
+        zMap[-sp->getAnim()->getZDist()].push_back(sp);
+    }
 
     for (auto const& kvp : zMap) {
         for (auto p : kvp.second) {
@@ -357,7 +429,9 @@ void StateGame::doInternalDraw() const
     }
 
     drawMap();
+    m_hud->draw();
     m_overlay->draw(getGame()->getRenderTarget());
+
     m_introText->draw();
 }
 

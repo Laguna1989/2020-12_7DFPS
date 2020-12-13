@@ -54,6 +54,9 @@ public:
     static float PlayerTurningSpeedSprintFactor() { return 1.75f; }
     static float PlayerWalkingSpeedSprintFactor() { return 1.5f; }
 
+    static float PlayerStartingHealth() { return 100.0f; }
+    static int PlayerStartingAmmo() { return 8; }
+
     static int MapTileSizeInPixel() { return 4; }
 
     static float SymbolTriggerDistance() { return 1.1f; }
@@ -64,6 +67,9 @@ public:
 
     static float ExplosionRadius() { return 1.0f; }
     static float ExplosionDamage() { return 51.0f; }
+
+    static float HealthPackRestoreAmount() { return 20.0f; }
+    static int AmmoPackRestoreAmout() { return 8; };
 };
 
 #endif

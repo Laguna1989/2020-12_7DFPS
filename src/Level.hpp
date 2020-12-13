@@ -37,6 +37,9 @@ public:
     std::map<std::size_t, jt::vector2> getKeyPositions() const;
     void PopForceField(std::size_t forceFieldID);
 
+    std::vector<jt::vector2> getAmmoPackPositions() const;
+    std::vector<jt::vector2> getHealthPackPositions() const;
+
 private:
     std::vector<TileType> m_levelVec {};
     jt::vector2u m_levelSize { 0, 0 };
@@ -47,6 +50,9 @@ private:
     std::vector<jt::vector2> m_enemyPositions;
 
     jt::vector2 m_symbolPosition;
+
+    std::vector<jt::vector2> m_ammoPackPositions;
+    std::vector<jt::vector2> m_healthPackPositions;
 
     std::map<std::size_t, jt::vector2> m_keyPositions;
     std::map<std::size_t, std::vector<std::shared_ptr<LevelWall>>> m_ForceFields;

@@ -1,10 +1,12 @@
 ﻿#ifndef GAME_STATE_GAME_HPP_INCLUDEGUARD
 #define GAME_STATE_GAME_HPP_INCLUDEGUARD
 
+#include "AmmoPack.hpp"
 #include "ContactListener.hpp"
 #include "Enemy.hpp"
 #include "Explosion.hpp"
 #include "GameState.hpp"
+#include "HealthPack.hpp"
 #include "Hud.hpp"
 #include "IntroText.hpp"
 #include "Key.hpp"
@@ -61,6 +63,8 @@ private:
     std::shared_ptr<b2World> m_world { nullptr };
 
     std::shared_ptr<jt::ObjectGroup<Key>> m_keys;
+    std::shared_ptr<jt::ObjectGroup<AmmoPack>> m_ammoPacks;
+    std::shared_ptr<jt::ObjectGroup<HealthPack>> m_healthPacks;
 
     std::shared_ptr<IntroText> m_introText;
 

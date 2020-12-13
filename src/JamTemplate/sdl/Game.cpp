@@ -150,7 +150,10 @@ void Game::PlayMusic(std::string const& fileName)
     if (!m_music) {
         std::cout << "load audio failed\n" << Mix_GetError();
     }
-    Mix_PlayMusic(m_music.get(), -1);
+    auto const result = Mix_PlayMusic(m_music.get(), -1);
+    if (result == -1) {
+        std::cout << "play music failed\n" << Mix_GetError();
+    }
 }
 
 void Game::StopMusic() { m_music = nullptr; }

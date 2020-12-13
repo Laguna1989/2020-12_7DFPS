@@ -1,5 +1,6 @@
 ﻿#include "Player.hpp"
 #include "Conversions.hpp"
+#include "GameBase.hpp"
 #include "GameProperties.hpp"
 #include "InputManager.hpp"
 #include "MathHelper.hpp"
@@ -98,7 +99,27 @@ bool Player::getTakeInput() { return m_takeInput; }
 
 bool Player::getShootNow()
 {
-    bool const t = m_shootNow;
+    bool t = m_shootNow;
     m_shootNow = false;
+    if (t) {
+        if (m_ammo > 0) {
+            m_ammo--;
+        } else {
+            t = false;
+        }
+    }
     return t;
 }
+
+void Player::pickUpAmmo() { m_ammo += GP::AmmoPackRestoreAmout(); }
+
+void Player::pickUpHealth()
+{
+    m_hitpoints += GP::HealthPackRestoreAmount();
+    if (m_hitpoints >= 100.0f) {
+        m_hitpoints = 100.0f;
+    }
+}
+
+float Player::getHitPoints() const { return m_hitpoints; }
+int Player::getAmmo() const { return m_ammo; }

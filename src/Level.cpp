@@ -67,9 +67,13 @@ void Level::loadLevel(std::string const& fileName, std::shared_ptr<b2World> worl
                 } else if (c.r() == 100 && c.g() == 100 && c.b() == 255) {
                     // map item
                 } else if (c.r() == 50 && c.g() == 255 && c.b() == 50) {
+                    m_ammoPackPositions.push_back(
+                        jt::vector2 { static_cast<float>(i), static_cast<float>(j) });
                     // ammunition
                 } else if (c.r() == 255 && c.g() == 50 && c.b() == 50) {
                     // healthpack
+                    m_healthPackPositions.push_back(
+                        jt::vector2 { static_cast<float>(i), static_cast<float>(j) });
                 }
             }
         }
@@ -118,3 +122,6 @@ void Level::PopForceField(std::size_t forceFieldID)
     // clean entry in force field list
     m_ForceFields.at(forceFieldID) = {};
 }
+
+std::vector<jt::vector2> Level::getAmmoPackPositions() const { return m_ammoPackPositions; }
+std::vector<jt::vector2> Level::getHealthPackPositions() const { return m_healthPackPositions; }

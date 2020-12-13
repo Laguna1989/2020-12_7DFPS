@@ -27,8 +27,8 @@ void Hud::doUpdate(float const elapsed)
     if (m_health >= 0) {
         m_scoreHealth->setText(std::to_string(static_cast<int>(m_health)));
     }
-    if (m_scoreP2 >= 0) {
-        m_scoreP2Text->setText("P2 Score: " + std::to_string(m_scoreP2));
+    if (m_ammo >= 0) {
+        m_scoreP2Text->setText(std::to_string(m_ammo));
     }
 
     m_scoreHealth->update(elapsed);
@@ -40,7 +40,10 @@ void Hud::doDraw() const
     if (m_health >= 0) {
         m_scoreHealth->draw(getGame()->getRenderTarget());
     }
-    if (m_scoreP2 >= 0) {
+    if (m_ammo >= 0) {
         m_scoreP2Text->draw(getGame()->getRenderTarget());
     }
 }
+
+void Hud::setHealth(float v) { m_health = v; }
+void Hud::setAmmo(int v) { m_ammo = v; }
