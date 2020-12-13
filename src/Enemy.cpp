@@ -32,7 +32,10 @@ void Enemy::doDraw() const { m_anim->draw(getGame()->getRenderTarget()); }
 void Enemy::TakeDamage(float damage)
 {
     m_hitpoints -= damage;
+    m_active = true;
     if (m_hitpoints <= 0.0f) {
         kill();
     }
 }
+
+void Enemy::setPlayerPosition(jt::vector2 playerPosition) { m_playerPos = playerPosition; }

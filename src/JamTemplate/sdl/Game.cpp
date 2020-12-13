@@ -101,7 +101,9 @@ void Game::doDraw() const
     // Now render the texture target to our screen
     SDL_RenderClear(getRenderTarget().get());
     SDL_Rect rect { m_srcRect.left(), m_srcRect.top(), m_srcRect.width(), m_srcRect.height() };
-    SDL_RenderCopyEx(getRenderTarget().get(), t, &rect, NULL, 0, NULL, SDL_FLIP_NONE);
+    SDL_Rect targetRect { static_cast<int>(m_shakeOffset.x()), static_cast<int>(m_shakeOffset.y()),
+        m_srcRect.width(), m_srcRect.height() };
+    SDL_RenderCopyEx(getRenderTarget().get(), t, &rect, &targetRect, 0, NULL, SDL_FLIP_NONE);
     SDL_RenderPresent(getRenderTarget().get());
 
     SDL_DestroyTexture(t);

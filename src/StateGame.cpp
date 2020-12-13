@@ -8,6 +8,7 @@
 #include "Renderer.hpp"
 #include "SmartShape.hpp"
 #include "SmartSprite.hpp"
+#include "Timer.hpp"
 #include "TweenAlpha.hpp"
 #include "color.hpp"
 #include <algorithm>
@@ -276,8 +277,8 @@ void StateGame::doInternalUpdate(float const elapsed)
                 continue;
             }
             auto const sp = e.lock();
-            ::calculateSpriteScale(
-                m_player->getPosition(), m_player->angle, sp->getPosition(), sp->getShape());
+            ::calculateSpriteScale(m_player->getPosition(), m_player->angle, sp->getPosition(),
+                sp->getShape(), -20.0f);
 
             sp->update(elapsed);
         }
@@ -498,11 +499,14 @@ void StateGame::SpawnExplosion(jt::vector2 pos)
     auto const ex = std::make_shared<Explosion>(pos);
     add(ex);
     ex->update(0.0f);
-    using ta = jt::TweenAlpha<jt::SmartShape>;
-    auto tw = ta::create(ex->getShape(), 0.75f, 255U, 0U);
-    tw->addCompleteCallback([ex = ex]() { ex->kill(); });
-    add(tw);
     m_explosions->push_back(ex);
+    m_overlay->flash(0.075f, jt::colors::Black);
+    getGame()->shake(0.25f, 3, 0.001f);
+    auto t = std::make_shared<jt::Timer>(
+        ex->getShape()->getCurrentAnimSingleFrameTime(),
+        [overlay = this->m_overlay]() { overlay->flash(0.075f); }, 1);
+
+    add(t);
 
     for (auto& wp : *m_enemies) {
         if (wp.expired()) {

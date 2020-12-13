@@ -173,7 +173,7 @@ void calculateWallScales(jt::vector2 const playerPos, float const angle,
             // horizontal grid intersections
             jt::vector2 hn = getH1(theta, px, py, dx, dy);
             jt::vector2 const hInc = getHInc(theta);
-            for (int i = 0; i != 50; ++i) {
+            for (int i = 0; i != GP::RendererMaxDistance(); ++i) {
                 int const ttcx = gethttcx(theta, hn.x());
                 int const ttcy = gethttcy(theta, hn.y());
                 if (ttcx < 0 || ttcy < 0
@@ -193,7 +193,7 @@ void calculateWallScales(jt::vector2 const playerPos, float const angle,
             // vertical grid intersections
             jt::vector2 vn = getV1(theta, px, py, dx, dy);
             jt::vector2 const vInc = getVInc(theta);
-            for (int i = 0; i != 50; ++i) {
+            for (int i = 0; i != GP::RendererMaxDistance(); ++i) {
                 int const ttcx = getvttcx(theta, vn.x());
                 int const ttcy = getvttcy(theta, vn.y());
                 if (ttcx < 0 || ttcy < 0

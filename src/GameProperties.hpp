@@ -46,6 +46,7 @@ public:
     static float RendererFoVAngle() { return 45.0f; }
     static float RendererSpriteScale() { return 24.0f; }
     static float RendererSideToleranceAngle() { return 20.0f; }
+    static int RendererMaxDistance() { return 80; }
 
     static float PlayerTurningSpeed() { return 45.0f; }
     static float PlayerAccelerationFactor() { return 125.0f; }
@@ -55,7 +56,7 @@ public:
     static float PlayerWalkingSpeedSprintFactor() { return 1.5f; }
 
     static float PlayerStartingHealth() { return 100.0f; }
-    static int PlayerStartingAmmo() { return 8; }
+    static int PlayerStartingAmmo() { return 16; }
 
     static int MapTileSizeInPixel() { return 4; }
 

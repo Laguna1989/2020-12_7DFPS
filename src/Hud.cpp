@@ -19,7 +19,8 @@ void Hud::doCreate()
     m_scoreP2Text->setColor(jt::color { 248, 249, 254 });
     m_scoreP2Text->update(0.0f);
     m_scoreP2Text->SetTextAlign(jt::SmartText::TextAlign::LEFT);
-    m_scoreP2Text->setPosition({ 650 / 2 + 10, 325 });
+    m_scoreP2Text->setPosition({ GP::GetWindowSize().x() / GP::GetZoom() - 100,
+        (GP::GetWindowSize().y() / GP::GetZoom() - 40.0f) });
 }
 
 void Hud::doUpdate(float const elapsed)

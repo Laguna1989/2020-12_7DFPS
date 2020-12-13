@@ -89,7 +89,8 @@ void Player::handleInput(float elapsed)
             vec(-1.0f * perp * GP::PlayerAccelerationFactor() * walkingSpeedFactor), true);
     }
 
-    if (jt::InputManager::justPressed(jt::KeyCode::Space)) {
+    if (jt::InputManager::justPressed(jt::KeyCode::Space)
+        || jt::InputManager::justPressed(jt::KeyCode::LControl)) {
         m_shootNow = true;
     }
 }
