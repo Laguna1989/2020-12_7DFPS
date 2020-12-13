@@ -42,6 +42,11 @@ public:
 
     virtual float getZoom() const = 0;
 
+    virtual void PlayMusic(std::string const& fileName) = 0;
+    virtual void StopMusic() = 0;
+    // range: 0.0f to 100.0f
+    virtual void SetMusicVolume(float v) = 0;
+
 protected:
     std::shared_ptr<GameState> m_state { nullptr };
     std::shared_ptr<GameState> m_nextState { nullptr };

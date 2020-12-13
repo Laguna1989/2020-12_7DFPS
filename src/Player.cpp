@@ -50,29 +50,42 @@ void Player::doUpdate(float elapsed)
 
 void Player::handleInput(float elapsed)
 {
+    bool isSprinting { false };
+    if (jt::InputManager::pressed(jt::KeyCode::LShift)
+        || jt::InputManager::pressed(jt::KeyCode::RShift)) {
+        isSprinting = true;
+    }
+
+    float turningSpeedFactor = isSprinting ? GP::PlayerTurningSpeedSprintFactor() : 1.0f;
     if (jt::InputManager::pressed(jt::KeyCode::E)
         || jt::InputManager::pressed(jt::KeyCode::Right)) {
-        angle -= elapsed * GP::PlayerTurningSpeed();
+        angle -= elapsed * GP::PlayerTurningSpeed() * turningSpeedFactor;
     }
     if (jt::InputManager::pressed(jt::KeyCode::Q) || jt::InputManager::pressed(jt::KeyCode::Left)) {
-        angle += elapsed * GP::PlayerTurningSpeed();
+        angle += elapsed * GP::PlayerTurningSpeed() * turningSpeedFactor;
     }
+
+    float walkingSpeedFactor = isSprinting ? GP::PlayerWalkingSpeedSprintFactor() : 1.0f;
     jt::vector2 const dir
         = { cos(jt::MathHelper::deg2rad(angle)), -sin(jt::MathHelper::deg2rad(angle)) };
     if (jt::InputManager::pressed(jt::KeyCode::W)) {
-        getB2Body()->ApplyForceToCenter(vec(dir * GP::PlayerAccelerationFactor()), true);
+        getB2Body()->ApplyForceToCenter(
+            vec(dir * GP::PlayerAccelerationFactor() * walkingSpeedFactor), true);
     }
     if (jt::InputManager::pressed(jt::KeyCode::S)) {
-        getB2Body()->ApplyForceToCenter(vec(-1.0f * dir * GP::PlayerAccelerationFactor()), true);
+        getB2Body()->ApplyForceToCenter(
+            vec(-1.0f * dir * GP::PlayerAccelerationFactor() * walkingSpeedFactor), true);
     }
 
     jt::vector2 const perp = jt::MathHelper::rotateBy(dir, 90);
 
     if (jt::InputManager::pressed(jt::KeyCode::A)) {
-        getB2Body()->ApplyForceToCenter(vec(perp * GP::PlayerAccelerationFactor()), true);
+        getB2Body()->ApplyForceToCenter(
+            vec(perp * GP::PlayerAccelerationFactor() * walkingSpeedFactor), true);
     }
     if (jt::InputManager::pressed(jt::KeyCode::D)) {
-        getB2Body()->ApplyForceToCenter(vec(-1.0f * perp * GP::PlayerAccelerationFactor()), true);
+        getB2Body()->ApplyForceToCenter(
+            vec(-1.0f * perp * GP::PlayerAccelerationFactor() * walkingSpeedFactor), true);
     }
 
     if (jt::InputManager::justPressed(jt::KeyCode::Space)) {

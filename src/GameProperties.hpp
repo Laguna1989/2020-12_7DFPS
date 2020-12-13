@@ -48,9 +48,11 @@ public:
     static float RendererSideToleranceAngle() { return 20.0f; }
 
     static float PlayerTurningSpeed() { return 45.0f; }
-    static float PlayerAccelerationFactor() { return 115.0f; }
-    static float PlayerMaxSpeed() { return 0.25f; }
+    static float PlayerAccelerationFactor() { return 125.0f; }
+    static float PlayerMaxSpeed() { return 0.35f; }
     static float PlayerVelocityDamping() { return 0.90f; }
+    static float PlayerTurningSpeedSprintFactor() { return 1.75f; }
+    static float PlayerWalkingSpeedSprintFactor() { return 1.5f; }
 
     static int MapTileSizeInPixel() { return 4; }
 

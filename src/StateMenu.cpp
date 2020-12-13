@@ -112,6 +112,8 @@ void StateMenu::doCreate()
         tw3->setSkipFrames();
         add(tw3);
     }
+
+    getGame()->PlayMusic("assets/ost.ogg");
 }
 
 void StateMenu::doInternalUpdate(float const elapsed)

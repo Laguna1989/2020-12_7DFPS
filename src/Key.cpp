@@ -13,7 +13,7 @@ jt::vector2 Key::getPosition() const { return m_position; }
 void Key::doCreate()
 {
     m_anim = std::make_shared<jt::SmartAnimation>();
-    m_anim->add("assets/glyph1.png", "idle", { 21, 24 }, { 0, 0, 1, 1, 2, 3, 4, 5 }, 0.25f);
+    m_anim->add("assets/key.png", "idle", { 21, 24 }, { 0 }, 0.25f);
     m_anim->play("idle");
 
     m_glow = std::make_shared<jt::SmartSprite>();

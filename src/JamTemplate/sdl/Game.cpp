@@ -38,6 +38,12 @@ Game::Game(unsigned int width, unsigned int height, float zoom, std::string cons
     }
     SDL_SetRenderDrawBlendMode(m_renderTarget.get(), SDL_BLENDMODE_BLEND);
     TTF_Init();
+#if MUSIC_OGG
+    std::cout << "ogg enabled\n";
+#endif
+    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
+    Mix_Init(MIX_INIT_OGG);
+    std::cout << "mix init: " << Mix_GetError() << std::endl;
     TextureManager::setRenderer(m_renderTarget);
 }
 
@@ -136,5 +142,19 @@ void Game::resetShake()
     m_shakeTimer = -1;
     m_shakeStrength = 0;
 }
+
+void Game::PlayMusic(std::string const& fileName)
+{
+    m_music = std::shared_ptr<Mix_Music>(
+        Mix_LoadMUS(fileName.c_str()), [](Mix_Music* m) { Mix_FreeMusic(m); });
+    if (!m_music) {
+        std::cout << "load audio failed\n" << Mix_GetError();
+    }
+    Mix_PlayMusic(m_music.get(), -1);
+}
+
+void Game::StopMusic() { m_music = nullptr; }
+
+void Game::SetMusicVolume(float v) { }
 
 } // namespace jt

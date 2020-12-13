@@ -16,7 +16,7 @@ void gameloop()
 
 int main()
 {
-    std::cout << "main\n";
+    // std::cout << "main\n";
     hideConsoleInRelease();
 
     jt::Random::useTimeAsRandomSeed();
