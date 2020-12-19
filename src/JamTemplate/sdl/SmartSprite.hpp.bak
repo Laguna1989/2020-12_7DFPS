@@ -41,7 +41,7 @@ public:
     // WARNING: This function is slow, because it needs to copy
     // graphics memory to ram first.
     jt::color getColorAtPixel(jt::vector2u pixelPos) const;
-    // clean up stored image
+
     void cleanImage();
 
 private:

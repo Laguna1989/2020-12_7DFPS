@@ -244,6 +244,6 @@ void calculateSpriteScale(jt::vector2 const playerPos, float const angle,
     // std::cout << d->getScale().y() << std::endl;
     auto const p = d->getPosition();
     auto const py = p.y() + 5.0f - (d->getLocalBounds().height()) * (0.5f - 0.5f * newScale);
-    d->setZDist(d->getZDist() - 1);
+    d->setZDist(d->getZDist());
     d->setPosition({ xp, py + yOffset });
 }

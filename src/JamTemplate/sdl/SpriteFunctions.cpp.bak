@@ -3,6 +3,7 @@
 #include "SDLHelper.hpp"
 #include "color.hpp"
 #include <cmath>
+#include <iostream>
 
 namespace jt {
 
@@ -104,6 +105,7 @@ std::shared_ptr<SDL_Texture> makeVignetteImage(
 std::shared_ptr<SDL_Texture> makeRect(
     std::shared_ptr<jt::renderTarget> rt, unsigned int w, unsigned int h)
 {
+    // std::cout << "spritefunctions makeRect: " << w << " " << h << "\n";
     std::shared_ptr<SDL_Surface> image = std::shared_ptr<SDL_Surface>(
         SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, SDL_PIXELFORMAT_RGBA32),
         [](SDL_Surface* s) { SDL_FreeSurface(s); });

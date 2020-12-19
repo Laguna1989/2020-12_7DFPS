@@ -20,8 +20,9 @@ Shot::Shot(std::shared_ptr<b2World> world, b2BodyDef* def)
 void Shot::doCreate()
 {
     m_anim = std::make_shared<jt::SmartAnimation>();
-    m_anim->add("assets/shot.png", "idle", { 8, 8 }, { 0, 1, 2, 3 }, 0.25f);
+    m_anim->add("assets/shot.png", "idle", { 21, 24 }, { 0, 1, 2, 3 }, 0.25f);
     m_anim->play("idle");
+    m_anim->setOffset(jt::vector2 { -5, 0 });
 }
 
 std::shared_ptr<jt::SmartAnimation> Shot::getAnim() { return m_anim; }

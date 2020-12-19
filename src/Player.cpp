@@ -124,3 +124,5 @@ void Player::pickUpHealth()
 
 float Player::getHitPoints() const { return m_hitpoints; }
 int Player::getAmmo() const { return m_ammo; }
+
+void Player::TakeDamate(float dmg) { m_hitpoints -= dmg; }

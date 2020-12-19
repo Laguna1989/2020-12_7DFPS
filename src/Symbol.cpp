@@ -24,13 +24,19 @@ void Symbol::doCreate()
 
     m_glow = std::make_shared<jt::SmartSprite>();
     m_glow->loadSprite("#g#60#255");
-    m_glow->setColor(jt::color { 255, 255, 255, 250 });
+    m_glow->setColor(jt::color { 255, 255, 255, 200 });
 }
 
 void Symbol::doUpdate(float const elapsed)
 {
     m_anim->update(elapsed);
-    m_glow->setPosition(m_anim->getPosition() + jt::vector2 { -20.0f, -20.0f });
+
+    float ofsx = m_anim->getLocalBounds().width() * m_anim->getScale().x() * 0.5f
+        - m_glow->getLocalBounds().width() * m_glow->getScale().x() * 0.5f;
+    float ofsy = m_anim->getLocalBounds().height() * m_anim->getScale().y() * 0.5f
+        - m_glow->getLocalBounds().height() * m_glow->getScale().y() * 0.5f;
+
+    m_glow->setPosition(m_anim->getPosition() + jt::vector2 { ofsx, ofsy });
     m_glow->update(elapsed);
     m_glow->setScale({ m_anim->getScale().x() * 0.75f, m_anim->getScale().y() });
 }

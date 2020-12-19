@@ -19,6 +19,7 @@ public:
     void pickUpAmmo();
     void pickUpHealth();
 
+    void TakeDamate(float dmg);
     float getHitPoints() const;
     int getAmmo() const;
 

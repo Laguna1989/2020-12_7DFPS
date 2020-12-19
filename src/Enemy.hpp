@@ -14,11 +14,15 @@ public:
     void TakeDamage(float damage);
 
     void setPlayerPosition(jt::vector2 playerPosition);
+    bool canAttack() const;
+    void doAttack();
 
 private:
     std::shared_ptr<jt::SmartAnimation> m_anim;
     jt::vector2 m_playerPos;
     bool m_active { false };
+    float m_attackTimer { 0.0f };
+    bool m_playerInRange { false };
 
     void doUpdate(float const elapsed) override;
     void doDraw() const override;

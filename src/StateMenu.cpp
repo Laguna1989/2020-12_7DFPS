@@ -24,34 +24,35 @@ void StateMenu::doCreate()
 
     m_background = std::make_shared<jt::SmartShape>();
     m_background->makeRect({ w, h });
-    m_background->setColor(GP::PaletteColor1());
+    m_background->setColor(jt::color { 181U, 167U, 116U, 255U });
     m_background->update(0.0f);
 
     m_text_Title = std::make_shared<jt::SmartText>();
-    m_text_Title->loadFont("assets/font.ttf", 32U, getGame()->getRenderTarget());
-    m_text_Title->setText("Hello\nTest");
+    m_text_Title->loadFont("assets/font.ttf", 40U, getGame()->getRenderTarget());
+    m_text_Title->setText(GP::GameName());
     m_text_Title->setPosition({ wC, 20 });
-    m_text_Title->setColor(GP::PaletteColor2());
+    m_text_Title->setColor(jt::color { 212U, 79U, 38U, 255U });
     m_text_Title->SetTextAlign(jt::SmartText::TextAlign::CENTER);
     m_text_Title->update(0.0f);
-
     m_text_Title->setShadow(GP::PaletteFontShadow(), jt::vector2 { 3, 3 });
 
     m_test_Explanation = std::make_shared<jt::SmartText>();
-    m_test_Explanation->loadFont("assets/font.ttf", 16U, getGame()->getRenderTarget());
-    m_test_Explanation->setText("Press Space to start the game");
+    m_test_Explanation->loadFont("assets/font.ttf", 24U, getGame()->getRenderTarget());
+    m_test_Explanation->setText("Press Space to start the game\n[Q,E, Arrows] turn\n[WASD] "
+                                "Move\n[shift] sprint\n[Space, LCtrl] Shoot\n[TAB] map");
     m_test_Explanation->setPosition({ wC, 150 });
-    m_test_Explanation->setColor(GP::PaletteColor4());
+    m_test_Explanation->setColor(jt::color { 171, 50, 50, 255 });
     m_test_Explanation->update(0.0f);
     m_test_Explanation->SetTextAlign(jt::SmartText::TextAlign::CENTER);
     m_test_Explanation->setShadow(GP::PaletteFontShadow(), jt::vector2 { 3, 3 });
 
     m_text_Credits = std::make_shared<jt::SmartText>();
-    m_text_Credits->loadFont("assets/font.ttf", 10U, getGame()->getRenderTarget());
+    m_text_Credits->loadFont("assets/font.ttf", 16U, getGame()->getRenderTarget());
     m_text_Credits->SetTextAlign(jt::SmartText::TextAlign::LEFT);
-    m_text_Credits->setText("Created by @Laguna_999 for #1hgj288\nHalloween2020");
-    m_text_Credits->setPosition({ 10, 265 });
-    m_text_Credits->setColor(GP::PaletteColor5());
+    m_text_Credits->setText("Created by @Laguna_999\nProudly supported by @Thunraz and "
+                            "@DiggiPander\n#7dfps December 2020");
+    m_text_Credits->setPosition({ 5, GP::GetWindowSize().y() / GP::GetZoom() - (16 + 4) * 3 - 5 });
+    m_text_Credits->setColor(jt::color { 54, 60, 61, 255 });
     m_text_Credits->update(0.0f);
     m_text_Credits->setShadow(GP::PaletteFontShadow(), jt::vector2 { 1, 1 });
 
@@ -136,7 +137,6 @@ void StateMenu::doInternalUpdate(float const elapsed)
         m_test_Explanation->update(elapsed);
         m_text_Credits->update(elapsed);
     }
-    m_text_Credits->setRotation(m_age * 45);
 }
 
 void StateMenu::doInternalDraw() const

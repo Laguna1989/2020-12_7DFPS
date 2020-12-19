@@ -8,8 +8,11 @@
 #include "Renderer.hpp"
 #include "SmartShape.hpp"
 #include "SmartSprite.hpp"
+#include "StateMenu.hpp"
 #include "Timer.hpp"
 #include "TweenAlpha.hpp"
+#include "TweenColor.hpp"
+#include "TweenPosition.hpp"
 #include "color.hpp"
 #include <algorithm>
 #include <map>
@@ -60,6 +63,14 @@ void StateGame::doCreate()
     m_overlay->makeRect(jt::vector2 { w, h });
     m_overlay->setColor(jt::color { 0, 0, 0 });
     m_overlay->update(0);
+
+    m_vignette = std::make_shared<jt::SmartSprite>();
+    m_vignette->loadSprite("#v#"
+        + std::to_string(static_cast<int>(GP::GetWindowSize().x() / GP::GetZoom())) + "#"
+        + std::to_string(static_cast<int>(GP::GetWindowSize().y() / GP::GetZoom())));
+    m_vignette->setColor(jt::color { 255, 255, 255, 100 });
+    m_vignette->update(0.0f);
+
     m_tween1 = TweenAlpha<SmartShape>::create(
         m_overlay, m_introText->getTotalTime(), std::uint8_t { 255 }, std::uint8_t { 100 });
     m_tween1->setSkipFrames();
@@ -71,6 +82,13 @@ void StateGame::doCreate()
     m_tween2->setStartDelay(m_introText->getTotalTime());
     m_tween2->addCompleteCallback([this]() { m_player->setTakeInput(true); });
     add(m_tween2);
+
+    m_weapon = std::make_shared<jt::SmartAnimation>();
+    m_weapon->add("assets/weapon.png", "idle", { 283, 244 }, { 0 }, 0.1f);
+    m_weapon->add(
+        "assets/weapon.png", "shoot", { 283, 244 }, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12 }, 0.03f);
+    m_weapon->play("idle");
+    m_weapon->setPosition(jt::vector2 { 258, 356 });
 
     m_world->SetContactListener(&m_contactListener);
 }
@@ -166,17 +184,17 @@ void StateGame::doCreateInternal()
     m_mapBackground->makeRect(
         { static_cast<float>(m_level->getLevelSizeInTiles().x() * GP::MapTileSizeInPixel()),
             static_cast<float>(m_level->getLevelSizeInTiles().y() * GP::MapTileSizeInPixel()) });
-    m_mapBackground->setColor(jt::colors::Cyan);
-    // std::cout << "StateGame::do CreateInternal 3.5\n";
+    m_mapBackground->setColor(jt::color { 204, 203, 184, 255 });
+
     m_mapWall = std::make_shared<jt::SmartShape>();
     m_mapWall->makeRect({ static_cast<float>(GP::MapTileSizeInPixel()),
         static_cast<float>(GP::MapTileSizeInPixel()) });
-    m_mapWall->setColor(jt::colors::Green);
-    // std::cout << "StateGame::do CreateInternal 3.75\n";
+    m_mapWall->setColor(jt::color { 9, 29, 33, 255 });
+
     m_mapPlayer = std::make_shared<jt::SmartShape>();
     m_mapPlayer->makeRect({ static_cast<float>(GP::MapTileSizeInPixel()),
         static_cast<float>(GP::MapTileSizeInPixel()) });
-    m_mapPlayer->setColor(jt::colors::Red);
+    m_mapPlayer->setColor(jt::color { 120, 97, 140, 255 });
 
     // std::cout << "StateGame::do CreateInternal 4\n";
     m_sky = std::make_shared<jt::SmartShape>();
@@ -218,24 +236,27 @@ void StateGame::doInternalUpdate(float const elapsed)
         m_floor->update(elapsed);
         m_sky->update(elapsed);
         m_hud->setAmmo(m_player->getAmmo());
+        m_hud->setHealth(m_player->getHitPoints());
         m_hud->update(elapsed);
-
-        if (jt::InputManager::justPressed(jt::KeyCode::Tab)
-            || jt::InputManager::justPressed(jt::KeyCode::M)) {
-            m_drawMiniMap = !m_drawMiniMap;
+        m_weapon->update(elapsed);
+        if (jt::InputManager::pressed(jt::KeyCode::Tab)
+            || jt::InputManager::pressed(jt::KeyCode::M)) {
+            m_drawMiniMap = true;
+        } else {
+            m_drawMiniMap = false;
         }
-        if (jt::InputManager::justPressed(jt::KeyCode::F1)) {
-            getGame()->switchState(std::make_shared<StateGame>(1));
-        }
-        if (jt::InputManager::justPressed(jt::KeyCode::F2)) {
-            getGame()->switchState(std::make_shared<StateGame>(2));
-        }
-        if (jt::InputManager::justPressed(jt::KeyCode::F3)) {
-            getGame()->switchState(std::make_shared<StateGame>(3));
-        }
-        if (jt::InputManager::justPressed(jt::KeyCode::F4)) {
-            getGame()->switchState(std::make_shared<StateGame>(4));
-        }
+        // if (jt::InputManager::justPressed(jt::KeyCode::F1)) {
+        //    getGame()->switchState(std::make_shared<StateGame>(1));
+        //}
+        // if (jt::InputManager::justPressed(jt::KeyCode::F2)) {
+        //    getGame()->switchState(std::make_shared<StateGame>(2));
+        //}
+        // if (jt::InputManager::justPressed(jt::KeyCode::F3)) {
+        //    getGame()->switchState(std::make_shared<StateGame>(3));
+        //}
+        // if (jt::InputManager::justPressed(jt::KeyCode::F4)) {
+        //    getGame()->switchState(std::make_shared<StateGame>(4));
+        //}
 
         int32 velocityIterations = 6;
         int32 positionIterations = 2;
@@ -257,7 +278,19 @@ void StateGame::doInternalUpdate(float const elapsed)
             auto const e = wp.lock();
             ::calculateSpriteScale(
                 m_player->getPosition(), m_player->angle, e->getPosition(), e->getAnimation());
+            e->setPlayerPosition(m_player->getPosition());
             e->update(elapsed);
+            if (e->canAttack()) {
+                e->doAttack();
+                m_player->TakeDamate(GP::EnemyAttackDamage());
+                auto col = jt::colors::Red;
+                col.a() = 100;
+                m_overlay->flash(0.25f, col);
+            }
+        }
+
+        if (m_player->getHitPoints() <= 0.0f) {
+            looseGame();
         }
 
         ::calculateSpriteScale(
@@ -270,15 +303,15 @@ void StateGame::doInternalUpdate(float const elapsed)
             }
             auto const sp = s.lock();
             ::calculateSpriteScale(
-                m_player->getPosition(), m_player->angle, sp->getPosition(), sp->getAnim(), 30.0f);
+                m_player->getPosition(), m_player->angle, sp->getPosition(), sp->getAnim(), 00.0f);
         }
         for (auto& e : *m_explosions) {
             if (e.expired()) {
                 continue;
             }
             auto const sp = e.lock();
-            ::calculateSpriteScale(m_player->getPosition(), m_player->angle, sp->getPosition(),
-                sp->getShape(), -20.0f);
+            ::calculateSpriteScale(
+                m_player->getPosition(), m_player->angle, sp->getPosition(), sp->getShape(), -5.0f);
 
             sp->update(elapsed);
         }
@@ -295,6 +328,7 @@ void StateGame::doInternalUpdate(float const elapsed)
             if (l <= 1.0f) {
                 m_level->PopForceField(sp->getKeyID());
                 sp->kill();
+                m_overlay->flash(0.25f);
             }
 
             sp->update(elapsed);
@@ -328,14 +362,16 @@ void StateGame::doInternalUpdate(float const elapsed)
             ::calculateSpriteScale(
                 m_player->getPosition(), m_player->angle, sp->getPosition(), sp->getAnim());
 
-            auto const dist = sp->getPosition() - m_player->getPosition();
-            auto const l = jt::MathHelper::length(dist);
-            if (l <= 1.0f) {
-                m_player->pickUpHealth();
-                auto col = jt::colors::Green;
-                col.a() = 100;
-                m_overlay->flash(0.5f, col);
-                sp->kill();
+            if (m_player->getHitPoints() < 100.0f) {
+                auto const dist = sp->getPosition() - m_player->getPosition();
+                auto const l = jt::MathHelper::length(dist);
+                if (l <= 1.0f) {
+                    m_player->pickUpHealth();
+                    auto col = jt::colors::Green;
+                    col.a() = 100;
+                    m_overlay->flash(0.5f, col);
+                    sp->kill();
+                }
             }
             sp->update(elapsed);
         }
@@ -351,8 +387,7 @@ void StateGame::doInternalUpdate(float const elapsed)
 
         if (distancePlayerSymbolSquared
             < GP::SymbolTriggerDistance() * GP::SymbolTriggerDistance()) {
-            m_ending = true;
-            getGame()->switchState(std::make_shared<StateGame>(m_levelID + 1));
+            winGame();
         }
 
         if (m_player->getShootNow()) {
@@ -430,6 +465,8 @@ void StateGame::doInternalDraw() const
     }
 
     drawMap();
+    m_weapon->draw(getGame()->getRenderTarget());
+    m_vignette->draw(getGame()->getRenderTarget());
     m_hud->draw();
     m_overlay->draw(getGame()->getRenderTarget());
 
@@ -484,14 +521,24 @@ void StateGame::SpawnShot()
     jt::vector2 const dir { mycos(a), -mysin(a) };
     // std::cout << dir.x() << " " << dir.y() << std::endl;
     // std::cout << a << std::endl;
-    shotBodyDef.position.Set(
-        m_player->getPosition().x() + dir.x() + 0.0f, m_player->getPosition().y() + dir.y() + 0.0f);
+
+    // offset for making shots spawn at the barrel
+    jt::vector2 v2 = jt::MathHelper::rotateBy(dir, 90) * 0.17f;
+
+    shotBodyDef.position.Set(m_player->getPosition().x() + dir.x() + v2.x(),
+        m_player->getPosition().y() + dir.y() + v2.y());
     auto s = std::make_shared<Shot>(m_world, &shotBodyDef);
     s->setVelocity(dir * GP::ShotSpeed());
     s->setState(weak_from_this());
     add(s);
+    s->getAnim()->setPosition(jt::vector2 { -50000.0f, -50000.0f });
     s->update(0.0f);
     m_shots->push_back(s);
+
+    m_weapon->play("shoot");
+    auto t = std::make_shared<jt::Timer>(
+        m_weapon->getCurrentAnimTotalTime(), [anim = m_weapon]() { anim->play("idle"); }, 1);
+    add(t);
 }
 
 void StateGame::SpawnExplosion(jt::vector2 pos)
@@ -519,6 +566,43 @@ void StateGame::SpawnExplosion(jt::vector2 pos)
         auto const l = jt::MathHelper::length(distance);
         if (l < GP::ExplosionRadius()) {
             e->TakeDamage(GP::ExplosionDamage());
+            using twc = jt::TweenColor<jt::SmartAnimation>;
+            auto t = twc::create(
+                e->getAnimation(), 0.25f, { 102U, 51U, 60U, 255U }, { 255U, 255U, 255U, 255U });
+            add(t);
         }
+    }
+}
+
+void StateGame::winGame()
+{
+    if (!m_ending) {
+        m_ending = true;
+        using twa = jt::TweenAlpha<jt::SmartShape>;
+        auto t = twa::create(m_overlay, 1.2f, 0U, 255U);
+
+        if (m_levelID != 4) {
+            t->addCompleteCallback(
+                [this]() { getGame()->switchState(std::make_shared<StateGame>(m_levelID + 1)); });
+
+        } else {
+            // last level finished
+            t->addCompleteCallback(
+                [this]() { getGame()->switchState(std::make_shared<StateMenu>()); });
+        }
+        add(t);
+    }
+}
+
+void StateGame::looseGame()
+{
+    if (!m_ending) {
+        m_ending = true;
+
+        using twa = jt::TweenAlpha<jt::SmartShape>;
+        auto t = twa::create(m_overlay, 1.2f, 0U, 255U);
+        t->addCompleteCallback([this]() { getGame()->switchState(std::make_shared<StateMenu>()); });
+        m_overlay->setFlashColor(jt::color { 255U, 255U, 255U, 0U });
+        add(t);
     }
 }

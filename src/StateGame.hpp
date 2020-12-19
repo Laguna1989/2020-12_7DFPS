@@ -40,6 +40,8 @@ public:
 private:
     std::shared_ptr<jt::SmartShape> m_background;
     std::shared_ptr<jt::SmartShape> m_overlay;
+    std::shared_ptr<jt::SmartSprite> m_vignette;
+    std::shared_ptr<jt::SmartAnimation> m_weapon;
 
     // walls for drawing, not the actual walls in the level.
     std::vector<std::shared_ptr<Wall>> m_walls;
@@ -91,6 +93,9 @@ private:
     void calculateWallScales();
     void calculateForceFieldScales();
     void drawMap() const;
+
+    void looseGame();
+    void winGame();
 };
 
 #endif

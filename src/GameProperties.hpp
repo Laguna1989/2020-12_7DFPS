@@ -14,7 +14,7 @@ public:
     static jt::color PaletteFontFront() { return jt::color { 248, 249, 254 }; }
     static jt::color PaletteFontShadow(std::uint8_t a = 255)
     {
-        return jt::color { 26, 29, 36, a };
+        return jt::color { 57, 34, 69, a };
     };
     static jt::color PaletteSelector() { return jt::color { 221, 228, 236 }; }
     static jt::color PaletteHighlight() { return jt::color { 163, 183, 205 }; }
@@ -36,7 +36,7 @@ public:
     static jt::color PalletteFloor() { return jt::color { 239, 126, 69, 255 }; }
     static jt::color PalletteSky() { return jt::color { 166, 221, 227, 255 }; }
 
-    static std::string GameName() { return "7DFPS"; }
+    static std::string GameName() { return "Burning Glyphs"; }
     static jt::vector2 GetWindowSize() { return jt::vector2 { 800, 600 }; }
     static float GetZoom() { return 1.0f; }
     static std::size_t GetDivisions()
@@ -48,12 +48,12 @@ public:
     static float RendererSideToleranceAngle() { return 20.0f; }
     static int RendererMaxDistance() { return 80; }
 
-    static float PlayerTurningSpeed() { return 45.0f; }
+    static float PlayerTurningSpeed() { return 55.0f; }
     static float PlayerAccelerationFactor() { return 125.0f; }
-    static float PlayerMaxSpeed() { return 0.35f; }
+    static float PlayerMaxSpeed() { return 0.4f; }
     static float PlayerVelocityDamping() { return 0.90f; }
-    static float PlayerTurningSpeedSprintFactor() { return 1.75f; }
-    static float PlayerWalkingSpeedSprintFactor() { return 1.5f; }
+    static float PlayerTurningSpeedSprintFactor() { return 2.0f; }
+    static float PlayerWalkingSpeedSprintFactor() { return 1.7f; }
 
     static float PlayerStartingHealth() { return 100.0f; }
     static int PlayerStartingAmmo() { return 16; }
@@ -65,9 +65,14 @@ public:
     static float ShotSpeed() { return 8.0f; }
 
     static float EnemyHitPointsDefault() { return 100.0f; }
+    static float EnemyTriggerDistance() { return 8.0f; }
+    static float EnemyVelocityFactor() { return 0.25f; }
+    static float EnemyAttackRadius() { return 1.45f; }
+    static float EnemyAttackTimer() { return 1.9f; }
+    static float EnemyAttackDamage() { return 18.0f; }
 
     static float ExplosionRadius() { return 1.0f; }
-    static float ExplosionDamage() { return 51.0f; }
+    static float ExplosionDamage() { return 35.0f; }
 
     static float HealthPackRestoreAmount() { return 20.0f; }
     static int AmmoPackRestoreAmout() { return 8; };

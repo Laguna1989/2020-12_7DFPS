@@ -3,6 +3,7 @@
 
 #include "GameObject.hpp"
 #include "GameProperties.hpp"
+#include "SmartSprite.hpp"
 #include "SmartText.hpp"
 #include <string>
 
@@ -19,6 +20,7 @@ private:
 
     jt::SmartText::Sptr m_scoreHealth;
     jt::SmartText::Sptr m_scoreP2Text;
+    jt::SmartSprite::Sptr m_backdrop;
 
     void doUpdate(float const elapsed) override;
 
